@@ -1,0 +1,20 @@
+server:
+  port: 8000
+
+spring:
+  application:
+    name: push-message-service
+  cloud:
+    nacos:
+      config:
+        server-addr: 10.89.187.69:8848
+        prefix: ${spring.application.name}
+        file-extension: yaml
+      discovery:
+        server-addr: 10.89.187.69:8848
+
+
+
+
+
+
