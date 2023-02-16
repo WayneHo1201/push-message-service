@@ -1,25 +1,31 @@
 package com.gffunds.pushmessage.controller;
 
+import cn.hutool.core.collection.ConcurrentHashSet;
 import com.gffunds.pushmessage.common.ReturnResult;
-import com.gffunds.pushmessage.config.RedisSubConfig;
+import com.gffunds.pushmessage.config.SubscribeConfig;
+import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.listener.RedisMessageListener;
+import com.gffunds.pushmessage.websocket.entity.BizTopic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author hezhc
  * @date 2023/2/14 8:53
  * @description redis推送订阅Controller
  */
-@RestController("redis_message")
+@RestController
+@RequestMapping("/redis_message")
 @Slf4j
 public class RedisMessageController {
 
@@ -29,10 +35,9 @@ public class RedisMessageController {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @GetMapping("/")
+    @GetMapping("/send")
     public String send(@RequestParam String channel) {
-        //TODO 执行主业务
-        redisTemplate.convertAndSend(channel, "for test");
+        redisTemplate.convertAndSend(channel, "测试redis推送");
         return "success";
     }
 
@@ -67,7 +72,7 @@ public class RedisMessageController {
     }
 
     @Autowired
-    private RedisSubConfig redisSubConfig;
+    private SubscribeConfig subscribeConfig;
 
     /**
      * 手动刷新redis channel
@@ -75,7 +80,14 @@ public class RedisMessageController {
     @GetMapping("/refresh")
     public ReturnResult<String> refresh() {
         container.removeMessageListener(listener);
-        List<String> subscribes = redisSubConfig.getSubscribes();
+        Set<String> subscribes = new ConcurrentHashSet<>();
+        for (BizTopic redisSubscribes : subscribeConfig.getRedis()) {
+            String bizId = redisSubscribes.getBizId();
+            subscribes.addAll(redisSubscribes.getTopics()
+                    .stream()
+                    .map(topic -> bizId + WebSocketConstants.SEPARATOR + topic)
+                    .collect(Collectors.toSet()));
+        }
         for (String subscribe : subscribes) {
             container.addMessageListener(listener, new ChannelTopic(subscribe));
         }
