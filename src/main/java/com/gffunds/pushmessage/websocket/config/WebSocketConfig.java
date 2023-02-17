@@ -1,8 +1,10 @@
 package com.gffunds.pushmessage.websocket.config;
 
+import cn.com.gffunds.httpclient.client.GFHttpClient;
 import com.gffunds.pushmessage.websocket.handler.CommonTextWebSocketHandler;
 import com.gffunds.pushmessage.websocket.interceptor.WebSocketInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -22,6 +24,17 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(commonTextWebSocketHandler, "/websocket")
                 .setAllowedOrigins("*")
                 .addInterceptors(webSocketInterceptor);
+    }
+
+    /**
+     * for test 构造GFHttpClient
+     */
+    @Bean
+    public GFHttpClient gfHttpClient(){
+        return new GFHttpClient()
+                .setSocketTimeout(3000)
+                .setConnectTime(3000)
+                .setAppId("sso");
     }
 
 }

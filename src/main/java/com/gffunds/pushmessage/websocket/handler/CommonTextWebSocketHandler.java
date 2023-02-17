@@ -1,5 +1,6 @@
 package com.gffunds.pushmessage.websocket.handler;
 
+import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
@@ -54,12 +55,20 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage message) {
         String payload = message.getPayload();
         MessageConsumer messageConsumer = SESSION.get(webSocketSession);
-        log.info("接收到的信息 --- " + payload);
+        log.info("ws接收到的信息： " + payload);
         // 构造messageRequest
-        MessageRequest messageRequest = JacksonUtil.toObject(payload, MessageRequest.class);
+        MessageRequest messageRequest;
+        try {
+            messageRequest = JacksonUtil.toObject(payload, MessageRequest.class);
+        } catch (JsonDeserializerException e) {
+            String msg = String.format("请求消息不合法！payload=%s", payload);
+            log.error(msg);
+            sendMessage(webSocketSession, new TextMessage(msg));
+            return;
+        }
         String msgId = messageRequest.getMsgId();
-        // 构建bizMessageManagerMap
         List<BizTopic> bizTopics = messageRequest.getBizTopics();
+        // 构建bizMessageManagerMap
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
         messageConsumer.setBizMessageManagers(bizMessageManagerMap);
@@ -68,11 +77,11 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
         // todo 通用消息返回
-        if (command.equals(WebSocketConstants.SUBSCRIBE)) {
+        if (WebSocketConstants.SUBSCRIBE.equals(command)) {
             // 发送订阅通知
             messageConsumer.subscribe(bizMessageManagerMap);
             response.setData("订阅成功！");
-        } else if (command.equals(WebSocketConstants.UNSUBSCRIBE)) {
+        } else if (WebSocketConstants.UNSUBSCRIBE.equals(command)) {
             // 发送退订通知
             messageConsumer.unsubscribe(bizMessageManagerMap);
             response.setData("退订成功！");

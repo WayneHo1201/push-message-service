@@ -7,6 +7,7 @@ import com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import com.gffunds.pushmessage.websocket.entity.BizTopic;
 import com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 @Configuration
 @RefreshScope
 @Data
+@Slf4j
 public class SubscribeConfig {
 
     /** 消息中心订阅redis数据源的订阅列表 */
@@ -68,6 +70,7 @@ public class SubscribeConfig {
             messageHandler.setBizId(bizId);
             map.put(bizId, messageHandler);
         }
+        log.info("----------消息分发器构造完成---------");
         return new MessageDispatcher(map);
     }
 

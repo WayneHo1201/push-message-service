@@ -95,6 +95,17 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- test -->
+        <dependency>
+            <groupId>org.java-websocket</groupId>
+            <artifactId>Java-WebSocket</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.com.gffunds</groupId>
+            <artifactId>gf-http-client</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
