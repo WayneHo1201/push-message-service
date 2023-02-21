@@ -56,23 +56,18 @@ public class MessageConsumer {
         String topic = message.getTopic();
         BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
         List<String> topics = bizMessageManager.getTopics();
-
         if (this.webSocketSession.isOpen()) {
             if (topics.contains(topic)) {
                 //  重试机制，多次发送失败valid置为0
-                if (!sendMessage(message, retryTimes)) {
-                    this.valid = WebSocketConstants.INVALID;
-                }
-                return;
+               sendMessage(message, retryTimes);
+               return;
             }
             // todo 判断主题是否在该客户端订阅列表
             for (String subscribeTopic : topics) {
                 if (subscribeTopic.contains("*") &&
                         topic.startsWith(subscribeTopic.replace("*", ""))) {
                     //  重试机制，多次发送失败valid置为0
-                    if (!sendMessage(message, retryTimes)) {
-                        this.valid = WebSocketConstants.INVALID;
-                    }
+                    sendMessage(message, retryTimes);
                     return;
                 }
             }
@@ -86,11 +81,9 @@ public class MessageConsumer {
      * 重试发送
      */
     @SneakyThrows
-    private boolean sendMessage(Message message, int retry) {
-        if (valid == WebSocketConstants.INVALID) {
-            return false;
-        }
+    private void sendMessage(Message message, int retry) {
         boolean flag = false;
+        retry ++;
         while (!flag && retry-- > 0) {
             try {
                 this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
@@ -100,7 +93,9 @@ public class MessageConsumer {
                 Thread.sleep(sleepMillis);
             }
         }
-        return flag;
+        if (!flag) {
+            this.valid = WebSocketConstants.INVALID;
+        }
     }
 
 
