@@ -2,7 +2,7 @@ package com.gffunds.pushmessage.websocket.entity;
 
 import lombok.Data;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author hezhc
@@ -14,5 +14,5 @@ public class BizTopic {
     /** 业务id */
     private String bizId;
     /** 消息主题列表，支持*匹配符 */
-    private List<String> topics;
+    private Set<String> topics;
 }

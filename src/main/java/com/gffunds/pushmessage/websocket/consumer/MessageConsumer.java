@@ -2,6 +2,7 @@ package com.gffunds.pushmessage.websocket.consumer;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import com.gffunds.pushmessage.websocket.entity.Message;
@@ -16,8 +17,8 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -55,7 +56,7 @@ public class MessageConsumer {
         String bizId = message.getBizId();
         String topic = message.getTopic();
         BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
-        List<String> topics = bizMessageManager.getTopics();
+        Set<String> topics = bizMessageManager.getTopics();
         if (this.webSocketSession.isOpen()) {
             if (topics.contains(topic)) {
                 //  重试机制，多次发送失败valid置为0
@@ -103,13 +104,19 @@ public class MessageConsumer {
      * 订阅
      */
     public void subscribe(Map<String, BizMessageManager> bizMessageManagerMap) {
-        this.bizMessageManagers = bizMessageManagerMap;
         Map<String, MessageHandler> dispatcherMap = getMessageDispatcher().getDispatcherMap();
+        // 把订阅的信息保存
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
-            // 分发器获取messageHandler
-            MessageHandler messageHandler = dispatcherMap.get(bizId);
-            messageHandler.registerObserver(this);
+            BizMessageManager value = entry.getValue();
+            if (bizMessageManagers.containsKey(bizId)) {
+                bizMessageManagers.get(bizId).getTopics().addAll(value.getTopics());
+            } else {
+                // 注册到messageHandler
+                bizMessageManagers.put(bizId, value);
+                MessageHandler messageHandler = dispatcherMap.get(bizId);
+                messageHandler.registerObserver(this);
+            }
         }
     }
 
@@ -120,10 +127,18 @@ public class MessageConsumer {
         Map<String, MessageHandler> dispatcherMap = getMessageDispatcher().getDispatcherMap();
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
-            // 分发器获取messageHandler
-            MessageHandler messageHandler = dispatcherMap.get(bizId);
-            if (messageHandler != null) {
-                messageHandler.removeObserver(this);
+            BizMessageManager value = entry.getValue();
+            if (bizMessageManagers.containsKey(bizId)) {
+                Set<String> topics = bizMessageManagers.get(bizId).getTopics();
+                topics.removeAll(value.getTopics());
+                // 该业务订阅列表为空
+                if (CollectionUtils.isEmpty(topics)) {
+                    bizMessageManagers.remove(bizId);
+                    MessageHandler messageHandler = dispatcherMap.get(bizId);
+                    messageHandler.removeObserver(this);
+                }
+            } else {
+                log.warn("客户端订阅列表不存在该业务，退订失败！bizId={}", bizId);
             }
         }
     }

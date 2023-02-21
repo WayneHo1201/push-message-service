@@ -34,7 +34,13 @@ public class MessageHandler {
      * 从订阅列表移除该消费者
      */
     public void removeObserver(MessageConsumer messageConsumer) {
-        consumerSet.remove(messageConsumer);
+        Set<MessageConsumer> messageConsumers = new ConcurrentHashSet<>();
+        for (MessageConsumer consumer : consumerSet) {
+            if (!consumer.equals(messageConsumer)) {
+                messageConsumers.add(consumer);
+            }
+        }
+        this.consumerSet = messageConsumers;
     }
 
     /**

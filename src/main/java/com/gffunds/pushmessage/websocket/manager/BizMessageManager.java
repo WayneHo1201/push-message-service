@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * @author hezhc
@@ -16,5 +16,5 @@ import java.util.List;
 @NoArgsConstructor
 public class BizMessageManager {
     private String bizId;
-    private List<String> topics;
+    private Set<String> topics;
 }

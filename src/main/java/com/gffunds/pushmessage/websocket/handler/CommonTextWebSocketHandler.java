@@ -79,7 +79,6 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 构建bizMessageManagerMap
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
-        messageConsumer.setBizMessageManagers(bizMessageManagerMap);
         // 构建命令返回对象
         MessageResponse response = new MessageResponse()
                 .setMsgId(msgId)
