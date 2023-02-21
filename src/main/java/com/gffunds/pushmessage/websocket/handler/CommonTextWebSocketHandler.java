@@ -11,6 +11,7 @@ import com.gffunds.pushmessage.websocket.entity.UserInfo;
 import com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -26,6 +27,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CommonTextWebSocketHandler extends TextWebSocketHandler {
 
+    @Value("${websocket.retry-times:3}")
+    private int retry;
+
+    @Value("${websocket.sleep-millis:3000}")
+    private int sleepMillis;
+
 
     /**
      * 线程安全Map，用来存放每个客户端对应的MessageConsumer对象
@@ -36,16 +43,17 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      * 新增socket
      */
     @Override
-    public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
-        log.info("成功建立连接");
+    public void afterConnectionEstablished(WebSocketSession webSocketSession) {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
         MessageConsumer messageConsumer = new MessageConsumer()
                 .setValid(WebSocketConstants.VALID)
                 .setUserInfo(userInfo)
-                .setWebSocketSession(webSocketSession);
+                .setWebSocketSession(webSocketSession)
+                .setRetryTimes(retry)
+                .setSleepMillis(sleepMillis);
         SESSION.put(webSocketSession, messageConsumer);
-        log.info("链接成功");
+        log.info("===========成功建立连接===========");
     }
 
     /**
@@ -72,6 +80,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
         messageConsumer.setBizMessageManagers(bizMessageManagerMap);
+        // 构建命令返回对象
         MessageResponse response = new MessageResponse()
                 .setMsgId(msgId)
                 .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
@@ -90,7 +99,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             log.error(msg);
             response.setData(msg);
         }
-        sendMessage(webSocketSession, new TextMessage(String.valueOf(response)));
+        sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
     }
 
     /**
@@ -109,8 +118,8 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         MessageConsumer messageConsumer = SESSION.get(session);
-        SESSION.remove(session);
         messageConsumer.closeConnection();
+        SESSION.remove(session);
         //获取用户信息
         log.info("连接已关闭：" + status);
     }

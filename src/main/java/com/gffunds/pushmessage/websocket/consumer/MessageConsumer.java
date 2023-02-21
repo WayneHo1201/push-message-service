@@ -1,5 +1,6 @@
 package com.gffunds.pushmessage.websocket.consumer;
 
+import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,11 +33,14 @@ public class MessageConsumer {
     private Integer valid;
     /** 用户信息 */
     private UserInfo userInfo;
-    /** 客户端session */
+    /** 客户端session  */
     private WebSocketSession webSocketSession;
     /** 对应客户端的订阅数据 */
     private Map<String, BizMessageManager> bizMessageManagers;
-
+    /** 重试次数 */
+    private int retryTimes;
+    /** 睡眠时间 */
+    private int sleepMillis;
 
     public MessageConsumer() {
         this.bizMessageManagers = new ConcurrentHashMap<>();
@@ -51,22 +56,51 @@ public class MessageConsumer {
         String topic = message.getTopic();
         BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
         List<String> topics = bizMessageManager.getTopics();
-        // todo 判断主题是否在该客户端订阅列表
+
         if (this.webSocketSession.isOpen()) {
             if (topics.contains(topic)) {
-                // todo 重试机制，多次发送失败valid置为0
-                this.webSocketSession.sendMessage(new TextMessage(String.valueOf(message)));
+                //  重试机制，多次发送失败valid置为0
+                if (!sendMessage(message, retryTimes)) {
+                    this.valid = WebSocketConstants.INVALID;
+                }
+                return;
             }
+            // todo 判断主题是否在该客户端订阅列表
             for (String subscribeTopic : topics) {
                 if (subscribeTopic.contains("*") &&
                         topic.startsWith(subscribeTopic.replace("*", ""))) {
-                    this.webSocketSession.sendMessage(new TextMessage(String.valueOf(message)));
+                    //  重试机制，多次发送失败valid置为0
+                    if (!sendMessage(message, retryTimes)) {
+                        this.valid = WebSocketConstants.INVALID;
+                    }
                     return;
                 }
             }
         } else {
             this.valid = WebSocketConstants.INVALID;
         }
+    }
+
+
+    /**
+     * 重试发送
+     */
+    @SneakyThrows
+    private boolean sendMessage(Message message, int retry) {
+        if (valid == WebSocketConstants.INVALID) {
+            return false;
+        }
+        boolean flag = false;
+        while (!flag && retry-- > 0) {
+            try {
+                this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
+                flag = true;
+            } catch (IOException e) {
+                log.error(String.format("消息发送失败！将会重试 %d 次", retry), e);
+                Thread.sleep(sleepMillis);
+            }
+        }
+        return flag;
     }
 
 
@@ -112,6 +146,8 @@ public class MessageConsumer {
     @SneakyThrows
     public void closeConnection() {
         this.valid = WebSocketConstants.INVALID;
+        this.bizMessageManagers = null;
+        this.userInfo = null;
         if (this.webSocketSession != null && this.webSocketSession.isOpen()) {
             this.webSocketSession.close();
         }

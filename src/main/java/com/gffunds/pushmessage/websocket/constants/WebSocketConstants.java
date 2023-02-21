@@ -22,7 +22,11 @@ public class WebSocketConstants {
     public static final int VALID = 1;
     /** 不合法 */
     public static final int INVALID = 0;
+    /** sessionId请求头 */
+    public static final String SESSION_ID_HEADER = "Session-Id";
     /** sessionId */
-    public static final String SESSION_ID = "Session-Id";
+    public static final String SESSION_ID = "sessionId";
+    /** sso鉴权路径 */
+    public static final String AUTHORIZATION_URL = "/sso/authorize";
 
 }

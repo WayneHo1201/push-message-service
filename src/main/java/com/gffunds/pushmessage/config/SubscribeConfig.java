@@ -1,8 +1,8 @@
 package com.gffunds.pushmessage.config;
 
 import cn.hutool.core.collection.ConcurrentHashSet;
-import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.listener.RedisMessageListener;
+import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import com.gffunds.pushmessage.websocket.entity.BizTopic;
 import com.gffunds.pushmessage.websocket.handler.MessageHandler;
@@ -12,7 +12,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -26,14 +25,16 @@ import java.util.stream.Collectors;
 /**
  * 订阅配置
  */
-@ConfigurationProperties(prefix = "subscribes")
+@ConfigurationProperties(prefix = "websocket.subscribes")
 @Configuration
 @RefreshScope
 @Data
 @Slf4j
 public class SubscribeConfig {
 
-    /** 消息中心订阅redis数据源的订阅列表 */
+    /**
+     * 消息中心订阅redis数据源的订阅列表
+     */
     private List<BizTopic> redis;
 
     /**
@@ -70,7 +71,7 @@ public class SubscribeConfig {
             messageHandler.setBizId(bizId);
             map.put(bizId, messageHandler);
         }
-        log.info("----------消息分发器构造完成---------");
+        log.info("===========消息分发器构造完成===========");
         return new MessageDispatcher(map);
     }
 

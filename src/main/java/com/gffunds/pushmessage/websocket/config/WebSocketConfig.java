@@ -29,8 +29,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
     /**
      * for test 构造GFHttpClient
      */
-    @Bean
-    public GFHttpClient gfHttpClient(){
+    @Bean("ssoGfHttpClient")
+    public GFHttpClient ssoGfHttpClient() {
         return new GFHttpClient()
                 .setSocketTimeout(3000)
                 .setConnectTime(3000)
