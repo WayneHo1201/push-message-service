@@ -46,20 +46,13 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         String sessionId = servletRequest.getHeader(WebSocketConstants.SESSION_ID_HEADER);
         // 校验sessionId
         if (enable) {
-            // 对接sso校验并获取用户信息
-            Map<String, String> map = new HashMap<>();
-            map.put(WebSocketConstants.SESSION_ID, sessionId);
-            HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
-            ReturnResult returnResult = rs.getContent();
-            if (!"0".equals(returnResult.getErrorCode())) {
-                throw new PushMessageException(returnResult.getErrorMsg());
-            }
-            UserInfo userInfo = JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
+            UserInfo userInfo = getUserInfo(sessionId);
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
         }
         //从request里面获取对象，存放attributes
         return super.beforeHandshake(request, response, wsHandler, attributes);
     }
+
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
@@ -68,5 +61,18 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         super.afterHandshake(request, response, wsHandler, ex);
     }
 
-
+    /**
+     * sessionId鉴权并获取用户信息
+     */
+    private UserInfo getUserInfo(String sessionId) throws PushMessageException {
+        // 对接sso校验并获取用户信息
+        Map<String, String> map = new HashMap<>();
+        map.put(WebSocketConstants.SESSION_ID, sessionId);
+        HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
+        ReturnResult returnResult = rs.getContent();
+        if (!"0".equals(returnResult.getErrorCode())) {
+            throw new PushMessageException(returnResult.getErrorMsg());
+        }
+        return JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
+    }
 }
