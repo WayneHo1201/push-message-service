@@ -11,6 +11,7 @@ import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -46,6 +47,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession webSocketSession) {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
+        String payload = (String) webSocketSession.getAttributes().get(WebSocketConstants.PAYLOAD);
         MessageConsumer messageConsumer = new MessageConsumer()
                 .setValid(WebSocketConstants.VALID)
                 .setUserInfo(userInfo)
@@ -53,6 +55,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setRetryTimes(retry)
                 .setSleepMillis(sleepMillis);
         SESSION.put(webSocketSession, messageConsumer);
+        if (StringUtils.isNotBlank(payload)) {
+            // payload不为空处理订阅消息命令消息
+            handleCommand(webSocketSession, payload, messageConsumer);
+        }
         log.info("===========成功建立连接===========");
     }
 
@@ -63,7 +69,14 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage message) {
         String payload = message.getPayload();
         MessageConsumer messageConsumer = SESSION.get(webSocketSession);
-        log.info("ws接收到的信息： " + payload);
+        handleCommand(webSocketSession, payload, messageConsumer);
+    }
+
+    /**
+     * 处理订阅退订信息
+     */
+    private void handleCommand(WebSocketSession webSocketSession, String payload, MessageConsumer messageConsumer) {
+        log.info("websocket接收到的信息： " + payload);
         // 构造messageRequest
         MessageRequest messageRequest;
         try {

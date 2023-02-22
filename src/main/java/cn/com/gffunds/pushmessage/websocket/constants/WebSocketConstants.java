@@ -28,5 +28,7 @@ public class WebSocketConstants {
     public static final String SESSION_ID = "sessionId";
     /** sso鉴权路径 */
     public static final String AUTHORIZATION_URL = "/sso/authorize";
+    /** 订阅退订信息 */
+    public static final String PAYLOAD = "payload";
 
 }

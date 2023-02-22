@@ -1,14 +1,15 @@
 package cn.com.gffunds.pushmessage.websocket.interceptor;
 
-import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.httpclient.client.GFHttpClient;
 import cn.com.gffunds.httpclient.entity.HttpClientResult;
+import cn.com.gffunds.pushmessage.common.ReturnResult;
 import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -48,6 +49,11 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         if (enable) {
             UserInfo userInfo = getUserInfo(sessionId);
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
+        }
+        // 获取建立连接同时发送命令
+        String payload = servletRequest.getHeader(WebSocketConstants.PAYLOAD);
+        if (StringUtils.isNotBlank(payload)) {
+            attributes.put(WebSocketConstants.PAYLOAD, payload);
         }
         //从request里面获取对象，存放attributes
         return super.beforeHandshake(request, response, wsHandler, attributes);

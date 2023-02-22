@@ -20,6 +20,7 @@ import java.util.Map;
 @Slf4j
 public class DeviceWebsocketClientService {
 
+    private String sendStr = "{\"msgId\":\"1\",\"command\":\"subscribe\",\"bizTopics\":[{\"bizId\":\"1\",\"topics\":[\"user\"]}]}";
 
     @Resource
     private ThreadPoolTaskExecutor workPoolScheduler;
@@ -32,6 +33,7 @@ public class DeviceWebsocketClientService {
             Map<String, String> httpHeaders = new HashMap<>(4);
             httpHeaders.put("Origin", "http://" + uri.getHost());
             httpHeaders.put("Session-Id", "sso:sessionId:guxh:0e9b64b10fa34479b13959c55344a5b2");
+            httpHeaders.put("payload", sendStr);
             DeviceWebsocketClient deviceWebsocketClient = new DeviceWebsocketClient(uri, httpHeaders, workPoolScheduler);
             deviceWebsocketClient.connect();
         } catch (Exception e) {

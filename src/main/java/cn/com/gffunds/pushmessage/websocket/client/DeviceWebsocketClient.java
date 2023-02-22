@@ -28,7 +28,7 @@ public class DeviceWebsocketClient extends BaseWebsocketClient{
     @Override
     public void onOpen(ServerHandshake serverHandshake) {
         log.info("------ {} onOpen ------", ACS_CTRL_RESULT);
-        this.send(sendStr);
+      //  this.send(sendStr);
         setConnectState(true);
     }
  
