@@ -48,7 +48,7 @@ public class PrometheusMeterAspect {
             return result;
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
-            // 分别统计指令推送统计以及指令推送耗时
+            // 统计redis推送
             messagePrometheus.importantMethodCount("redis推送", methodName);
         }
     }
@@ -63,7 +63,7 @@ public class PrometheusMeterAspect {
             return result;
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
-            // 分别统计指令推送统计以及指令推送耗时
+            // 统计客户端订阅
             messagePrometheus.importantMethodCount("客户端订阅", methodName);
         }
     }
@@ -78,7 +78,7 @@ public class PrometheusMeterAspect {
             return result;
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
-            // 分别统计指令推送统计以及指令推送耗时
+            // 统计客户端退订
             messagePrometheus.importantMethodCount("客户端退订", methodName);
         }
     }
