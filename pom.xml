@@ -16,6 +16,7 @@
         <lombok.version>1.18.12</lombok.version>
         <mapstruct.version>1.5.0.RC1</mapstruct.version>
         <prometheus.version>1.5.14</prometheus.version>
+        <powermock.version>1.7.1</powermock.version>
     </properties>
 
     <dependencies>
@@ -117,6 +118,17 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>${prometheus.version}</version>
+        </dependency>
+        <!-- test -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

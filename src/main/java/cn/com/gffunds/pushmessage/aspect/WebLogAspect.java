@@ -32,7 +32,7 @@ public class WebLogAspect {
     /**
      * 以 controller 包下定义的所有请求为切入点
      */
-    @Pointcut("execution(public * com.cn.gffunds.pushmessage.controller..*.*(..)) " +
+    @Pointcut("execution(public * cn.com.gffunds.pushmessage.controller..*.*(..)) " +
             "&& !execution(* cn.com.gffunds.pushmessage.handler.GlobalExceptionHandler.*(..))")
     public void webLog() {
     }
