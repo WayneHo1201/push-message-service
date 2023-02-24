@@ -1,7 +1,7 @@
 server:
   port: 8000
   servlet:
-    context-path: push-message-service
+    context-path: /push-message-service
 
 spring:
   application:
