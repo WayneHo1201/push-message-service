@@ -41,7 +41,7 @@ public class RedisConfig {
 
     @Bean("irmRedisTemplate")
     public RedisTemplate<String, Object> irmRedisTemplate() {
-        return redisTemplate(irmRedisConnectionFactory());
+        return defaultRedisTemplate(irmRedisConnectionFactory());
     }
 
     @Bean("irmRedisConnectionFactory")
@@ -52,7 +52,7 @@ public class RedisConfig {
 
     @Bean("ipmRedisTemplate")
     public RedisTemplate<String, Object> ipmRedisTemplate() {
-        return redisTemplate(ipmRedisConnectionFactory());
+        return defaultRedisTemplate(ipmRedisConnectionFactory());
     }
 
     @Bean("ipmRedisConnectionFactory")
@@ -109,8 +109,6 @@ public class RedisConfig {
         return new LettuceConnectionFactory(configuration, builder.build());
     }
 
-
-
     /**
      * 自定义 redisTemplate （方法名一定要叫 redisTemplate 因为 @Bean 是根据方法名配置这个bean的name的）
      * 默认的 RedisTemplate<K,V> 为泛型，使用时不太方便，自定义为 <String, Object>
@@ -118,6 +116,10 @@ public class RedisConfig {
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        return defaultRedisTemplate(redisConnectionFactory);
+    }
+
+    public RedisTemplate<String, Object> defaultRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         // 配置 json 序列化器 - Jackson2JsonRedisSerializer
         Jackson2JsonRedisSerializer jacksonSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -139,6 +141,9 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
+
+
+
 
 
     /**
