@@ -1,15 +1,19 @@
 package cn.com.gffunds.pushmessage.controller;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
+import cn.com.gffunds.pushmessage.common.ReturnResult;
+import cn.com.gffunds.pushmessage.config.IpmRedisProperties;
+import cn.com.gffunds.pushmessage.config.IrmRedisProperties;
+import cn.com.gffunds.pushmessage.listener.IpmRedisMessageListener;
+import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
+import cn.com.gffunds.pushmessage.service.RefreshService;
+import cn.hutool.extra.spring.SpringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -47,25 +51,27 @@ public class RedisMessageController {
     }
 
 
-//    /**
-//     * 手动刷新redis channel
-//     */
-//    @GetMapping("/refresh")
-//    public ReturnResult<String> refresh() {
-//        container.removeMessageListener(listener);
-//        Set<String> subscribes = new ConcurrentHashSet<>();
-//        for (BizTopic redisSubscribes : subscribeConfig.getRedis()) {
-//            String bizId = redisSubscribes.getBizId();
-//            subscribes.addAll(redisSubscribes.getTopics()
-//                    .stream()
-//                    .map(topic -> bizId + WebSocketConstants.SEPARATOR + topic)
-//                    .collect(Collectors.toSet()));
-//        }
-//        for (String subscribe : subscribes) {
-//            container.addMessageListener(listener, new ChannelTopic(subscribe));
-//        }
-//        String msg = String.format("刷新redis订阅配置！[%s]", String.join(",", subscribes));
-//        return new ReturnResult<>(msg);
-//    }
+    @Resource
+    private IrmRedisMessageListener irmRedisMessageListener;
+    @Resource
+    private IpmRedisMessageListener ipmRedisMessageListener;
+    @Autowired
+    private IrmRedisProperties irmRedisProperties;
+    @Autowired
+    private IpmRedisProperties ipmRedisProperties;
+    @Autowired
+    private RefreshService refreshService;
 
+    /**
+     * 手动刷新redis channel
+     */
+    @GetMapping("/refresh")
+    public ReturnResult<String> refresh() {
+        RedisMessageListenerContainer irmContainer = SpringUtil.getBean("irmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
+        RedisMessageListenerContainer ipmContainer = SpringUtil.getBean("ipmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
+        refreshService.redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
+        refreshService.redisConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
+        String msg = "刷新redis订阅配置！";
+        return new ReturnResult<>(msg);
+    }
 }

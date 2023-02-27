@@ -37,8 +37,8 @@ public class RedisConfig {
     private IpmRedisProperties ipmRedisProperties;
 
     @Bean("irmRedisTemplate")
-    public RedisTemplate<String, Object> irmRedisTemplate(LettuceConnectionFactory irmRedisConnectionFactory) {
-        return createRedisTemplate(irmRedisConnectionFactory);
+    public RedisTemplate<String, Object> irmRedisTemplate() {
+        return createRedisTemplate(irmRedisConnectionFactory());
     }
 
     @Bean("irmRedisConnectionFactory")
@@ -48,8 +48,8 @@ public class RedisConfig {
     }
 
     @Bean("ipmRedisTemplate")
-    public RedisTemplate<String, Object> ipmRedisTemplate(LettuceConnectionFactory ipmRedisConnectionFactory) {
-        return createRedisTemplate(ipmRedisConnectionFactory);
+    public RedisTemplate<String, Object> ipmRedisTemplate() {
+        return createRedisTemplate(ipmRedisConnectionFactory());
     }
 
     @Bean("ipmRedisConnectionFactory")

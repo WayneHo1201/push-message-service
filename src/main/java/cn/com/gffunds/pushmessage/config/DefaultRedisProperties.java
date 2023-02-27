@@ -1,13 +1,14 @@
 package cn.com.gffunds.pushmessage.config;
 
+import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 /**
  * @author hezhc
  * @date 2023/2/24 17:38
- * @description
+ * @description redis连接默认配置
  */
 @Data
 public class DefaultRedisProperties {
@@ -19,4 +20,6 @@ public class DefaultRedisProperties {
     private Integer maxIdle;
     private Integer minIdle;
     private Long timeout;
+    private List<BizTopic> subscribes;
+
 }
