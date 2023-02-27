@@ -21,5 +21,26 @@ public class DefaultRedisProperties {
     private Integer minIdle;
     private Long timeout;
     private List<BizTopic> subscribes;
+    private Sentinel sentinel;
+    /**
+     * Redis sentinel properties.
+     */
+    @Data
+    public static class Sentinel {
 
+        /**
+         * Name of the Redis server.
+         */
+        private String master;
+
+        /**
+         * Comma-separated list of "host:port" pairs.
+         */
+        private List<String> nodes;
+
+        /**
+         * Password for authenticating with sentinel(s).
+         */
+        private String password;
+    }
 }

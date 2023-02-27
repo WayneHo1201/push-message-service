@@ -1,14 +1,11 @@
 package cn.com.gffunds.pushmessage.controller;
 
 import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.entity.SessionIdDTO;
 import cn.com.gffunds.pushmessage.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
 
 /**
  * @author hezhc
@@ -20,9 +17,9 @@ public class AuthenticateController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/authorize")
-    public ReturnResult<String> authorize(@Valid @RequestBody SessionIdDTO sessionIdDTO) throws Exception {
-        String token = userService.authorize(sessionIdDTO.getSessionId());
+    @GetMapping("/gettoken")
+    public ReturnResult<String> authorize(@RequestParam String sessionId) throws Exception {
+        String token = userService.authorize(sessionId);
         return new ReturnResult<>(token);
     }
 }

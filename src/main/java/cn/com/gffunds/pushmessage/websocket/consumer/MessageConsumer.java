@@ -13,6 +13,10 @@ import lombok.Data;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -29,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Data
 @Accessors(chain = true)
 @Slf4j
+@Component
+@Scope("prototype")
 public class MessageConsumer {
     /** 是否有效(0-无效，1-有效) */
     private Integer valid;
@@ -39,9 +45,15 @@ public class MessageConsumer {
     /** 对应客户端的订阅数据 */
     private Map<String, BizMessageManager> bizMessageManagers;
     /** 重试次数 */
+    @Value("${websocket.retry-times:3}")
     private int retryTimes;
     /** 睡眠时间 */
+    @Value("${websocket.sleep-millis:3000}")
     private int sleepMillis;
+
+    @Autowired
+    private MessageDispatcher messageDispatcher;
+
 
     public MessageConsumer() {
         this.bizMessageManagers = new ConcurrentHashMap<>();
@@ -104,7 +116,7 @@ public class MessageConsumer {
      * 订阅
      */
     public void subscribe(Map<String, BizMessageManager> bizMessageManagerMap) {
-        Map<String, MessageHandler> dispatcherMap = getMessageDispatcher().getDispatcherMap();
+        Map<String, MessageHandler> dispatcherMap = messageDispatcher.getDispatcherMap();
         // 把订阅的信息保存
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
@@ -124,7 +136,7 @@ public class MessageConsumer {
      * 退订
      */
     public void unsubscribe(Map<String, BizMessageManager> bizMessageManagerMap) {
-        Map<String, MessageHandler> dispatcherMap = getMessageDispatcher().getDispatcherMap();
+        Map<String, MessageHandler> dispatcherMap = messageDispatcher.getDispatcherMap();
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
             BizMessageManager value = entry.getValue();
@@ -141,13 +153,6 @@ public class MessageConsumer {
                 log.warn("客户端订阅列表不存在该业务，退订失败！bizId={}", bizId);
             }
         }
-    }
-
-    /**
-     * 获取MessageDispatcher
-     */
-    private MessageDispatcher getMessageDispatcher() {
-        return SpringUtil.getBean(MessageDispatcher.class);
     }
 
     /**

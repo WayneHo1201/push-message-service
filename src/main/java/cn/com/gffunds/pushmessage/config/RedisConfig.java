@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -20,6 +20,8 @@ import org.springframework.data.redis.connection.lettuce.LettucePoolingClientCon
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -57,20 +59,53 @@ public class RedisConfig {
 
     @Bean("ipmRedisConnectionFactory")
     public LettuceConnectionFactory ipmRedisConnectionFactory() {
-        return defaultSentinelRedisConnectionFactory(ipmRedisProperties);
+        return defaultRedisConnectionFactory(ipmRedisProperties);
     }
 
     /**
      * 单例模式的redisConnectionFactory
      */
     private LettuceConnectionFactory defaultRedisConnectionFactory(DefaultRedisProperties redisProperties) {
-        // 基本配置
+        if (redisProperties.getSentinel() != null) {
+            RedisConfiguration configuration = defaultSentinelRedisConnectionFactory(redisProperties.getSentinel());
+            return getLettuceConnectionFactory(redisProperties, configuration);
+        } else {
+            // 基本配置
+            RedisStandaloneConfiguration configuration = getRedisStandaloneConfiguration(redisProperties);
+            return getLettuceConnectionFactory(redisProperties, configuration);
+        }
+    }
+
+    /**
+     * 单例模式的redisConnectionFactory
+     */
+    private RedisStandaloneConfiguration getRedisStandaloneConfiguration(DefaultRedisProperties redisProperties) {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(redisProperties.getHost());
         configuration.setPort(redisProperties.getPort());
         if (Strings.isNotBlank(redisProperties.getPassword())) {
             configuration.setPassword(RedisPassword.of(redisProperties.getPassword()));
         }
+        return configuration;
+    }
+
+
+    /**
+     * sentinel模式的redisConnectionFactory
+     */
+    private RedisSentinelConfiguration defaultSentinelRedisConnectionFactory(DefaultRedisProperties.Sentinel sentinel) {
+        // 基本配置
+        RedisSentinelConfiguration configuration = new RedisSentinelConfiguration();
+        configuration.setMaster(sentinel.getMaster());
+        if (Strings.isNotBlank(sentinel.getPassword())) {
+            configuration.setPassword(RedisPassword.of(sentinel.getPassword()));
+        }
+        List<RedisNode> redisNodeList = createSentinels(sentinel);
+        configuration.setSentinels(redisNodeList);
+        return configuration;
+    }
+
+    private LettuceConnectionFactory getLettuceConnectionFactory(DefaultRedisProperties redisProperties, RedisConfiguration configuration) {
         // 连接池配置
         GenericObjectPoolConfig<Object> genericObjectPoolConfig = new GenericObjectPoolConfig<>();
         genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
@@ -84,30 +119,10 @@ public class RedisConfig {
         return new LettuceConnectionFactory(configuration, builder.build());
     }
 
-    /**
-     * sentinel模式的redisConnectionFactory
-     */
-    private LettuceConnectionFactory defaultSentinelRedisConnectionFactory(DefaultSentinelRedisProperties redisProperties) {
-        // 基本配置
-        RedisSentinelConfiguration configuration = new RedisSentinelConfiguration();
-        configuration.setMaster(redisProperties.getMaster());
-        if (Strings.isNotBlank(redisProperties.getPassword())) {
-            configuration.setPassword(RedisPassword.of(redisProperties.getPassword()));
-        }
-        List<RedisNode> redisNodeList = getRedisNodes(redisProperties.getNodes());
-        configuration.setSentinels(redisNodeList);
-        // 连接池配置
-        GenericObjectPoolConfig<Object> genericObjectPoolConfig = new GenericObjectPoolConfig<>();
-        genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
-        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getMaxWait());
-        genericObjectPoolConfig.setMaxIdle(redisProperties.getMaxIdle());
-        genericObjectPoolConfig.setMinIdle(redisProperties.getMinIdle());
-        // lettuce pool
-        LettucePoolingClientConfiguration.LettucePoolingClientConfigurationBuilder builder = LettucePoolingClientConfiguration.builder();
-        builder.poolConfig(genericObjectPoolConfig);
-        builder.commandTimeout(Duration.ofSeconds(redisProperties.getTimeout()));
-        return new LettuceConnectionFactory(configuration, builder.build());
-    }
+
+
+
+
 
     /**
      * 自定义 redisTemplate （方法名一定要叫 redisTemplate 因为 @Bean 是根据方法名配置这个bean的name的）
@@ -144,26 +159,20 @@ public class RedisConfig {
 
 
 
-
-
-    /**
-     * 解析sentinel配置
-     */
     @SneakyThrows
-    private List<RedisNode> getRedisNodes(String nodes) {
-        List<RedisNode> redisNodeList = new ArrayList<>();
-        try {
-            if (StringUtils.isNotBlank(nodes)) {
-                String[] paths = nodes.split(",");
-                for (String path : paths) {
-                    String[] split = path.split(":");
-                    redisNodeList.add(new RedisNode(split[0], Integer.parseInt(split[1])));
-                }
+    private List<RedisNode> createSentinels(DefaultRedisProperties.Sentinel sentinel) {
+        List<RedisNode> nodes = new ArrayList<>();
+        for (String node : sentinel.getNodes()) {
+            try {
+                String[] parts = StringUtils.split(node, ":");
+                Assert.state(parts.length == 2, "Must be defined as 'host:port'");
+                nodes.add(new RedisNode(parts[0], Integer.parseInt(parts[1])));
             }
-        } catch (Exception e) {
-            throw new PushMessageException("redis sentinel配置异常，请检查nacos配置！");
+            catch (RuntimeException ex) {
+                throw new PushMessageException("Invalid redis sentinel property '" + node + "'");
+            }
         }
-        return redisNodeList;
+        return nodes;
     }
 
 }

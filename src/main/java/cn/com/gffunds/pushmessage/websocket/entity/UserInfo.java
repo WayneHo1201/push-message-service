@@ -3,7 +3,6 @@ package cn.com.gffunds.pushmessage.websocket.entity;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import java.io.Serializable;
 
 /**
  * @author hezhc
@@ -12,7 +11,7 @@ import java.io.Serializable;
  */
 @Data
 @Accessors(chain = true)
-public class UserInfo implements Serializable {
+public class UserInfo {
     /** OA ID */
     private String userId;
     private String username;

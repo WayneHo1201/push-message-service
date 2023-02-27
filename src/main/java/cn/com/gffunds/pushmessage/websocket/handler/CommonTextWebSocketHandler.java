@@ -27,11 +27,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CommonTextWebSocketHandler extends TextWebSocketHandler {
 
-    @Value("${websocket.retry-times:3}")
-    private int retry;
-
-    @Value("${websocket.sleep-millis:3000}")
-    private int sleepMillis;
 
 
     /**
@@ -49,9 +44,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         MessageConsumer messageConsumer = new MessageConsumer()
                 .setValid(WebSocketConstants.VALID)
                 .setUserInfo(userInfo)
-                .setWebSocketSession(webSocketSession)
-                .setRetryTimes(retry)
-                .setSleepMillis(sleepMillis);
+                .setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
     }
