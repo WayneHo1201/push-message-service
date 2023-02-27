@@ -16,5 +16,5 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "spring.redis.ipm")
 @Configuration
 @RefreshScope
-public class IpmRedisProperties extends DefaultRedisProperties{
+public class IpmRedisProperties extends DefaultSentinelRedisProperties {
 }

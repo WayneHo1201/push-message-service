@@ -1,8 +1,11 @@
 package cn.com.gffunds.pushmessage.config;
 
+import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +14,7 @@ import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisPassword;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +22,8 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 控制配置类的加载顺序,先加载 RedisAutoConfiguration.class 再加载该类,这样才能覆盖默认的 RedisTemplate
@@ -38,7 +41,7 @@ public class RedisConfig {
 
     @Bean("irmRedisTemplate")
     public RedisTemplate<String, Object> irmRedisTemplate() {
-        return createRedisTemplate(irmRedisConnectionFactory());
+        return redisTemplate(irmRedisConnectionFactory());
     }
 
     @Bean("irmRedisConnectionFactory")
@@ -49,17 +52,16 @@ public class RedisConfig {
 
     @Bean("ipmRedisTemplate")
     public RedisTemplate<String, Object> ipmRedisTemplate() {
-        return createRedisTemplate(ipmRedisConnectionFactory());
+        return redisTemplate(ipmRedisConnectionFactory());
     }
 
     @Bean("ipmRedisConnectionFactory")
     public LettuceConnectionFactory ipmRedisConnectionFactory() {
-        return defaultRedisConnectionFactory(ipmRedisProperties);
+        return defaultSentinelRedisConnectionFactory(ipmRedisProperties);
     }
 
-
     /**
-     * 默认构建redisConnectionFactory
+     * 单例模式的redisConnectionFactory
      */
     private LettuceConnectionFactory defaultRedisConnectionFactory(DefaultRedisProperties redisProperties) {
         // 基本配置
@@ -69,7 +71,6 @@ public class RedisConfig {
         if (Strings.isNotBlank(redisProperties.getPassword())) {
             configuration.setPassword(RedisPassword.of(redisProperties.getPassword()));
         }
-
         // 连接池配置
         GenericObjectPoolConfig<Object> genericObjectPoolConfig = new GenericObjectPoolConfig<>();
         genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
@@ -80,9 +81,34 @@ public class RedisConfig {
         LettucePoolingClientConfiguration.LettucePoolingClientConfigurationBuilder builder = LettucePoolingClientConfiguration.builder();
         builder.poolConfig(genericObjectPoolConfig);
         builder.commandTimeout(Duration.ofSeconds(redisProperties.getTimeout()));
-        //lettuceConnectionFactory.afterPropertiesSet();
         return new LettuceConnectionFactory(configuration, builder.build());
     }
+
+    /**
+     * sentinel模式的redisConnectionFactory
+     */
+    private LettuceConnectionFactory defaultSentinelRedisConnectionFactory(DefaultSentinelRedisProperties redisProperties) {
+        // 基本配置
+        RedisSentinelConfiguration configuration = new RedisSentinelConfiguration();
+        configuration.setMaster(redisProperties.getMaster());
+        if (Strings.isNotBlank(redisProperties.getPassword())) {
+            configuration.setPassword(RedisPassword.of(redisProperties.getPassword()));
+        }
+        List<RedisNode> redisNodeList = getRedisNodes(redisProperties.getNodes());
+        configuration.setSentinels(redisNodeList);
+        // 连接池配置
+        GenericObjectPoolConfig<Object> genericObjectPoolConfig = new GenericObjectPoolConfig<>();
+        genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
+        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getMaxWait());
+        genericObjectPoolConfig.setMaxIdle(redisProperties.getMaxIdle());
+        genericObjectPoolConfig.setMinIdle(redisProperties.getMinIdle());
+        // lettuce pool
+        LettucePoolingClientConfiguration.LettucePoolingClientConfigurationBuilder builder = LettucePoolingClientConfiguration.builder();
+        builder.poolConfig(genericObjectPoolConfig);
+        builder.commandTimeout(Duration.ofSeconds(redisProperties.getTimeout()));
+        return new LettuceConnectionFactory(configuration, builder.build());
+    }
+
 
 
     /**
@@ -90,8 +116,8 @@ public class RedisConfig {
      * 默认的 RedisTemplate<K,V> 为泛型，使用时不太方便，自定义为 <String, Object>
      * 默认序列化方式为 JdkSerializationRedisSerializer 序列化后的内容不方便阅读，改为序列化成 json
      */
-
-    public RedisTemplate<String, Object> createRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         // 配置 json 序列化器 - Jackson2JsonRedisSerializer
         Jackson2JsonRedisSerializer jacksonSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
@@ -113,5 +139,27 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
+
+
+    /**
+     * 解析sentinel配置
+     */
+    @SneakyThrows
+    private List<RedisNode> getRedisNodes(String nodes) {
+        List<RedisNode> redisNodeList = new ArrayList<>();
+        try {
+            if (StringUtils.isNotBlank(nodes)) {
+                String[] paths = nodes.split(",");
+                for (String path : paths) {
+                    String[] split = path.split(":");
+                    redisNodeList.add(new RedisNode(split[0], Integer.parseInt(split[1])));
+                }
+            }
+        } catch (Exception e) {
+            throw new PushMessageException("redis sentinel配置异常，请检查nacos配置！");
+        }
+        return redisNodeList;
+    }
+
 }
 

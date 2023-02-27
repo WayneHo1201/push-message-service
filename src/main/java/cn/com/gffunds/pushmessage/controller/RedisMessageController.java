@@ -70,7 +70,7 @@ public class RedisMessageController {
         RedisMessageListenerContainer irmContainer = SpringUtil.getBean("irmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
         RedisMessageListenerContainer ipmContainer = SpringUtil.getBean("ipmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
         refreshService.redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
-        refreshService.redisConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
+        refreshService.redisSentinelConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
         String msg = "刷新redis订阅配置！";
         return new ReturnResult<>(msg);
     }
