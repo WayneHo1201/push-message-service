@@ -1,17 +1,16 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
-import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
-import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
-import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
-import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
+import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
+import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
+import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -47,7 +46,6 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession webSocketSession) {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
-        String payload = (String) webSocketSession.getAttributes().get(WebSocketConstants.PAYLOAD);
         MessageConsumer messageConsumer = new MessageConsumer()
                 .setValid(WebSocketConstants.VALID)
                 .setUserInfo(userInfo)
@@ -55,10 +53,6 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setRetryTimes(retry)
                 .setSleepMillis(sleepMillis);
         SESSION.put(webSocketSession, messageConsumer);
-        if (StringUtils.isNotBlank(payload)) {
-            // payload不为空处理订阅消息命令消息
-            handleCommand(webSocketSession, payload, messageConsumer);
-        }
         log.info("===========成功建立连接===========");
     }
 

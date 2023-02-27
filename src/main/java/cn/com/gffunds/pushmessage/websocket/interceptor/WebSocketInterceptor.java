@@ -1,15 +1,11 @@
 package cn.com.gffunds.pushmessage.websocket.interceptor;
 
-import cn.com.gffunds.commons.json.JacksonUtil;
-import cn.com.gffunds.httpclient.client.GFHttpClient;
-import cn.com.gffunds.httpclient.entity.HttpClientResult;
-import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.exception.PushMessageException;
+import cn.com.gffunds.pushmessage.service.UserService;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -18,9 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -30,8 +24,10 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
 
     @Value("${websocket.authentication.enable:true}")
     private boolean enable;
-    @Resource
-    private GFHttpClient ssoGfHttpClient;
+
+    @Autowired
+    private UserService userService;
+
 
     public WebSocketInterceptor() {
         this.setCopyAllAttributes(true);
@@ -43,17 +39,12 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         log.info("===========握手之前=============");
         HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
-        // 根据sessionId获取用户信息
-        String sessionId = servletRequest.getHeader(WebSocketConstants.SESSION_ID_HEADER);
+        // 根据token获取用户信息
+        String token = servletRequest.getParameter(WebSocketConstants.TOKEN);
         // 校验sessionId
         if (enable) {
-            UserInfo userInfo = getUserInfo(sessionId);
+            UserInfo userInfo = userService.getUserInfo(token);
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
-        }
-        // 获取建立连接同时发送命令
-        String payload = servletRequest.getHeader(WebSocketConstants.PAYLOAD);
-        if (StringUtils.isNotBlank(payload)) {
-            attributes.put(WebSocketConstants.PAYLOAD, payload);
         }
         //从request里面获取对象，存放attributes
         return super.beforeHandshake(request, response, wsHandler, attributes);
@@ -65,20 +56,5 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
                                Exception ex) {
         log.info("===========握手之后=============");
         super.afterHandshake(request, response, wsHandler, ex);
-    }
-
-    /**
-     * sessionId鉴权并获取用户信息
-     */
-    private UserInfo getUserInfo(String sessionId) throws PushMessageException {
-        // 对接sso校验并获取用户信息
-        Map<String, String> map = new HashMap<>();
-        map.put(WebSocketConstants.SESSION_ID, sessionId);
-        HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
-        ReturnResult returnResult = rs.getContent();
-        if (!"0".equals(returnResult.getErrorCode())) {
-            throw new PushMessageException(returnResult.getErrorMsg());
-        }
-        return JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
     }
 }

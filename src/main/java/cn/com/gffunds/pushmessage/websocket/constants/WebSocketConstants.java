@@ -22,8 +22,8 @@ public class WebSocketConstants {
     public static final int VALID = 1;
     /** 不合法 */
     public static final int INVALID = 0;
-    /** sessionId请求头 */
-    public static final String SESSION_ID_HEADER = "Session-Id";
+    /** token */
+    public static final String TOKEN = "token";
     /** sessionId */
     public static final String SESSION_ID = "sessionId";
     /** sso鉴权路径 */
