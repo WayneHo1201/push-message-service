@@ -19,7 +19,7 @@ public class AuthenticateController {
 
     @GetMapping("/gettoken")
     public ReturnResult<String> authorize(@RequestParam String sessionId) throws Exception {
-        String token = userService.authorize(sessionId);
+        String token = userService.gettoken(sessionId);
         return new ReturnResult<>(token);
     }
 }

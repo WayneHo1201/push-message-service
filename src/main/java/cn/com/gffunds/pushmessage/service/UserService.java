@@ -4,6 +4,7 @@ import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.httpclient.client.GFHttpClient;
 import cn.com.gffunds.httpclient.entity.HttpClientResult;
 import cn.com.gffunds.pushmessage.common.ReturnResult;
+import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
 import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
@@ -38,17 +39,18 @@ public class UserService {
      */
     @SneakyThrows
     @SuppressWarnings("unchecked")
-    public String authorize(String sessionId) {
+    public String gettoken(String sessionId) {
         // 对接sso校验并获取用户信息
         Map<String, String> map = new HashMap<>();
         map.put(WebSocketConstants.SESSION_ID, sessionId);
         HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
         ReturnResult returnResult = rs.getContent();
         if (!"0".equals(returnResult.getErrorCode())) {
-            throw new PushMessageException(returnResult.getErrorMsg());
+            throw new PushMessageException(returnResult.getErrorMsg(), ErrCodeEnum.TOKEN_INCORRECT.code());
         }
-        // todo 构建token
-        String uuid = IdUtil.randomUUID();
+        // 构建token
+        String uuid = IdUtil.randomUUID().replace("-", "");
+        //String uuid = "test";
         // 获取用户信息
         UserInfo userInfo = JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
         redisTemplate.opsForValue().set(uuid, userInfo, expireTime, TimeUnit.SECONDS);
@@ -59,18 +61,19 @@ public class UserService {
     /**
      * token换取用户信息
      */
-    @SneakyThrows
     @SuppressWarnings("unchecked")
-    public UserInfo getUserInfo(String token) {
+    public UserInfo getUserInfo(String token) throws PushMessageException {
         UserInfo userInfo;
         try {
             userInfo = (UserInfo) redisTemplate.opsForValue().get(token);
         } catch (Exception e) {
-            throw new PushMessageException("token获取用户信息失败，请检查token！");
+            throw new PushMessageException("token获取用户信息失败，请检查redis配置和token！", ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         // 消费后删除
         if (userInfo != null) {
             redisTemplate.delete(token);
+        } else {
+            throw new PushMessageException("token获取用户信息为空，请检查token！", ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         return userInfo;
     }
