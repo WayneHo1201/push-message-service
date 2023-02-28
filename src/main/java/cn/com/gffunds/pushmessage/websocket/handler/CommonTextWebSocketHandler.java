@@ -9,6 +9,7 @@ import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +43,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
         MessageConsumer messageConsumer = SpringUtil.getBean("messageConsumer", MessageConsumer.class);
-        messageConsumer.setUserInfo(userInfo).setWebSocketSession(webSocketSession);
+        messageConsumer.setUserInfo(userInfo)
+                .setWebSocketSession(webSocketSession)
+                .setValid(new AtomicBoolean(true))
+                .setCreateTime(DateUtil.now());
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
     }
