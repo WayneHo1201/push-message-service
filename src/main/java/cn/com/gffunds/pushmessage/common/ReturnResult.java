@@ -44,7 +44,7 @@ public class ReturnResult<T> {
     }
 
     public boolean isSuccess() {
-        return !ErrCodeEnum.SUCCESS.code().equals(errorCode);
+        return ErrCodeEnum.SUCCESS.code().equals(errorCode);
     }
 
 }
