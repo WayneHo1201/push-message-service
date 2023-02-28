@@ -13,14 +13,14 @@ import lombok.experimental.Accessors;
 public class Message {
     /** 消息类型，普通消息、命令响应 */
     private String msgType;
+    /** 消息源 */
+    private String sourceId;
     /** 业务id */
     private String bizId;
     /** 消息主题 */
     private String topic;
     /** 消息体 */
     private Object data;
-    /** 消息源 */
-    private String messageSource;
     /** 息接收时间 */
     private String receiveTime;
 }

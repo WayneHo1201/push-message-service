@@ -30,7 +30,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
 
     }
 
-    public void messageListen(RedisTemplate redisTemplate, Message redisMessage, String messageSource) {
+    public void messageListen(RedisTemplate redisTemplate, Message redisMessage, String sourceId) {
         // 获取消息
         byte[] messageBody = redisMessage.getBody();
         // 使用值序列化器转换
@@ -42,7 +42,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
         String receiveTime = DateUtil.now();
         Map<String, Object> logMap = new LinkedHashMap<>();
         // 渠道名称转换
-        logMap.put("消息源", messageSource);
+        logMap.put("消息源", sourceId);
         logMap.put("频道", channel);
         logMap.put("消息内容", msg);
         logMap.put("接收时间", receiveTime);
@@ -52,17 +52,17 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
         String[] channelSplit = channel.split(WebSocketConstants.SEPARATOR);
         String bizId = channelSplit[0];
         String topic = channelSplit[1];
-        handleMessage(bizId, topic, msg, messageSource, receiveTime);
+        handleMessage(bizId, topic, msg, sourceId, receiveTime);
     }
 
     @Override
-    public void handleMessage(String bizId, String topic, Object msg, String messageSource, String receiveTime) {
+    public void handleMessage(String bizId, String topic, Object msg, String sourceId, String receiveTime) {
         cn.com.gffunds.pushmessage.websocket.entity.Message message = new cn.com.gffunds.pushmessage.websocket.entity.Message()
                 .setBizId(bizId)
                 .setData(msg)
                 .setTopic(topic)
                 .setMsgType(WebSocketConstants.MSG_TYPE_NORMAL)
-                .setMessageSource(messageSource)
+                .setSourceId(sourceId)
                 .setReceiveTime(receiveTime);
         //  推送到分发器
         messageDispatcher.doDispatch(message);
