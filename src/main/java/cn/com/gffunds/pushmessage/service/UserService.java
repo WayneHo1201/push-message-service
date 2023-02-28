@@ -10,6 +10,7 @@ import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.hutool.core.util.IdUtil;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @description 用户服务
  */
 @Service
+@Slf4j
 public class UserService {
     @Resource
     private GFHttpClient ssoGfHttpClient;
@@ -67,13 +69,17 @@ public class UserService {
         try {
             userInfo = (UserInfo) redisTemplate.opsForValue().get(token);
         } catch (Exception e) {
-            throw new PushMessageException("token获取用户信息失败，请检查redis配置和token！", ErrCodeEnum.TOKEN_INCORRECT.code());
+            String msg = "token获取用户信息失败，请检查redis配置和token！";
+            log.error(msg);
+            throw new PushMessageException(msg, ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         // 消费后删除
         if (userInfo != null) {
             redisTemplate.delete(token);
         } else {
-            throw new PushMessageException("token获取用户信息为空，请检查token！", ErrCodeEnum.TOKEN_INCORRECT.code());
+            String msg = "token获取用户信息为空，请检查token！";
+            log.error(msg);
+            throw new PushMessageException(msg, ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         return userInfo;
     }
