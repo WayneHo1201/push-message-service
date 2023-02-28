@@ -4,15 +4,16 @@ import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
+import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
-import com.alibaba.nacos.common.utils.CollectionUtils;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
@@ -21,6 +22,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -130,9 +132,10 @@ public class MessageConsumer {
     /**
      * 订阅
      */
-    public void subscribe(Map<String, BizMessageManager> bizMessageManagerMap) {
+    public void subscribe(Map<String, BizMessageManager> bizMessageManagerMap, MessageResponse response) {
         Map<String, MessageHandler> dispatcherMap = messageDispatcher.getDispatcherMap();
         // 把订阅的信息保存
+        Set<String> bizIdSet = new HashSet<>();
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
             BizMessageManager value = entry.getValue();
@@ -142,16 +145,26 @@ public class MessageConsumer {
                 // 注册到messageHandler
                 bizMessageManagers.put(bizId, value);
                 MessageHandler messageHandler = dispatcherMap.get(bizId);
+                if (messageHandler == null) {
+                    bizIdSet.add(bizId);
+                    continue;
+                }
                 messageHandler.registerObserver(this);
             }
+        }
+        if (!CollectionUtils.isEmpty(bizIdSet)) {
+            String msg = String.format("客户端订阅的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
+            log.warn(msg);
+            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
         }
     }
 
     /**
      * 退订
      */
-    public void unsubscribe(Map<String, BizMessageManager> bizMessageManagerMap) {
+    public void unsubscribe(Map<String, BizMessageManager> bizMessageManagerMap, MessageResponse response) {
         Map<String, MessageHandler> dispatcherMap = messageDispatcher.getDispatcherMap();
+        Set<String> bizIdSet = new HashSet<>();
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
             BizMessageManager value = entry.getValue();
@@ -162,11 +175,18 @@ public class MessageConsumer {
                 if (CollectionUtils.isEmpty(topics)) {
                     bizMessageManagers.remove(bizId);
                     MessageHandler messageHandler = dispatcherMap.get(bizId);
-                    messageHandler.removeObserver(this);
+                    if (messageHandler != null) {
+                        messageHandler.removeObserver(this);
+                    }
                 }
             } else {
-                log.warn("客户端订阅列表不存在该业务，退订失败！bizId={}", bizId);
+                bizIdSet.add(bizId);
             }
+        }
+        if (!CollectionUtils.isEmpty(bizIdSet)) {
+            String msg = String.format("客户端退订的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
+            log.warn(msg);
+            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
         }
     }
 

@@ -15,6 +15,8 @@ public class MessageResponse {
     private String msgType;
     /** 消息id */
     private String msgId;
+    /** 是否成功 */
+    private String success;
     /** 消息体 */
     private String data;
 }

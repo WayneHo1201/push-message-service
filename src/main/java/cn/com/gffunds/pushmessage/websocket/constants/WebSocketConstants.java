@@ -30,7 +30,9 @@ public class WebSocketConstants {
     public static final String SESSION_ID = "sessionId";
     /** sso鉴权路径 */
     public static final String AUTHORIZATION_URL = "/sso/authorize";
-    /** 订阅退订信息 */
-    public static final String PAYLOAD = "payload";
+    /** 命令类型执行成功  */
+    public static final String MSG_SUCCESS= "1";
+    /** 命令类型执行失败 */
+    public static final String MSG_FAIL = "0";
 
 }

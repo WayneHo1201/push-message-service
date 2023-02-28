@@ -80,21 +80,20 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 构建命令返回对象
         MessageResponse response = new MessageResponse()
                 .setMsgId(msgId)
-                .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
+                .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND)
+                .setSuccess(WebSocketConstants.MSG_SUCCESS);
         String command = messageRequest.getCommand();
         //  通用消息返回
         if (WebSocketConstants.SUBSCRIBE.equals(command)) {
             // 发送订阅通知
-            messageConsumer.subscribe(bizMessageManagerMap);
-            response.setData("订阅成功！");
+            messageConsumer.subscribe(bizMessageManagerMap, response);
         } else if (WebSocketConstants.UNSUBSCRIBE.equals(command)) {
             // 发送退订通知
-            messageConsumer.unsubscribe(bizMessageManagerMap);
-            response.setData("退订成功！");
+            messageConsumer.unsubscribe(bizMessageManagerMap, response);
         } else {
             String msg = String.format("不支持该命令！command=%s", command);
             log.error(msg);
-            response.setData(msg);
+            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
         }
         sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
     }
