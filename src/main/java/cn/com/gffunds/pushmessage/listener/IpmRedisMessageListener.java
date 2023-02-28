@@ -16,6 +16,6 @@ public class IpmRedisMessageListener extends AbstractRedisMessageListener {
 
     @Override
     public void onMessage(org.springframework.data.redis.connection.Message redisMessage, byte[] pattern) {
-        super.messageListen(ipmRedisTemplate, redisMessage);
+        super.messageListen(ipmRedisTemplate, redisMessage, "ipm");
     }
 }

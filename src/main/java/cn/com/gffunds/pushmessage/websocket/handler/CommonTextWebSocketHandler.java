@@ -9,9 +9,9 @@ import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 public class CommonTextWebSocketHandler extends TextWebSocketHandler {
 
 
-
     /**
      * 线程安全Map，用来存放每个客户端对应的MessageConsumer对象
      */
@@ -41,13 +40,12 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession webSocketSession) {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
-        MessageConsumer messageConsumer = new MessageConsumer()
-                .setValid(WebSocketConstants.VALID)
-                .setUserInfo(userInfo)
-                .setWebSocketSession(webSocketSession);
+        MessageConsumer messageConsumer = SpringUtil.getBean("messageConsumer", MessageConsumer.class);
+        messageConsumer.setUserInfo(userInfo).setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
     }
+
 
     /**
      * 接收socket信息
@@ -84,7 +82,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setMsgId(msgId)
                 .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
-        // todo 通用消息返回
+        //  通用消息返回
         if (WebSocketConstants.SUBSCRIBE.equals(command)) {
             // 发送订阅通知
             messageConsumer.subscribe(bizMessageManagerMap);
@@ -128,7 +126,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         if (session.isOpen()) {
             session.close();
         }
-        log.info("连接出错");
+        log.error("连接出错", exception);
     }
 
     @Override

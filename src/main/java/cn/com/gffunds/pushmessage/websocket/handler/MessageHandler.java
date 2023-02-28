@@ -1,10 +1,11 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
-import cn.com.gffunds.pushmessage.websocket.entity.Message;
-import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
-import lombok.Data;
+import cn.com.gffunds.pushmessage.websocket.entity.Message;
+import cn.hutool.core.collection.ConcurrentHashSet;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -14,7 +15,8 @@ import java.util.Set;
  * @date 2023/2/14 16:40
  * @description 消息处理器，用于处理某个业务
  */
-@Data
+@Getter
+@Setter
 public class MessageHandler {
     private String bizId;
     private Set<MessageConsumer> consumerSet;
@@ -48,14 +50,23 @@ public class MessageHandler {
      */
     public void notifyObservers(Message message) {
         Iterator<MessageConsumer> iterator = consumerSet.iterator();
+        boolean flag = false;
         while (iterator.hasNext()) {
             MessageConsumer messageConsumer = iterator.next();
             if (messageConsumer.getValid() == WebSocketConstants.INVALID) {
-                iterator.remove();
+                flag = true;
                 continue;
             }
             messageConsumer.consume(message);
         }
+        if (flag) {
+            removeInvalidObserver();
+        }
+
+    }
+
+    private synchronized void removeInvalidObserver() {
+        consumerSet.removeIf(messageConsumer -> messageConsumer.getValid() == WebSocketConstants.INVALID);
     }
 
     /**

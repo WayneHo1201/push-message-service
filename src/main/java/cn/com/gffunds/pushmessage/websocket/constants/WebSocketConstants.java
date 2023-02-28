@@ -1,5 +1,7 @@
 package cn.com.gffunds.pushmessage.websocket.constants;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author hezhc
  * @date 2023/2/14 15:06
@@ -19,9 +21,9 @@ public class WebSocketConstants {
     /** 命令类型 */
     public static final String MSG_TYPE_COMMAND = "1";
     /** 合法 */
-    public static final int VALID = 1;
+    public static final AtomicBoolean VALID = new AtomicBoolean(true);
     /** 不合法 */
-    public static final int INVALID = 0;
+    public static final AtomicBoolean INVALID = new AtomicBoolean(false);
     /** token */
     public static final String TOKEN = "token";
     /** sessionId */

@@ -16,6 +16,6 @@ public class IrmRedisMessageListener extends AbstractRedisMessageListener {
 
     @Override
     public void onMessage(org.springframework.data.redis.connection.Message redisMessage, byte[] pattern) {
-        super.messageListen(irmRedisTemplate, redisMessage);
+        super.messageListen(irmRedisTemplate, redisMessage, "irm");
     }
 }

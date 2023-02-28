@@ -31,6 +31,11 @@ public enum ErrCodeEnum {
      * 业务逻辑异常
      */
     REST_EXCEPTION("B0001", "REST_EXCEPTION"),
+
+    /**
+     * 鉴权异常
+     */
+    TOKEN_INCORRECT("U0101", "TOKEN_INCORRECT"),
     ;
 
     private String code;

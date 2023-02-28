@@ -1,12 +1,9 @@
 package cn.com.gffunds.pushmessage.websocket.dispatcher;
 
+import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
-import cn.com.gffunds.pushmessage.exception.PushMessageException;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.*;
 
 import java.util.Map;
 
@@ -15,7 +12,8 @@ import java.util.Map;
  * @date 2023/2/14 14:32
  * @description 消息分发器
  */
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageDispatcher {

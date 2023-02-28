@@ -1,15 +1,15 @@
 package cn.com.gffunds.pushmessage.websocket.consumer;
 
+import cn.com.gffunds.commons.json.JacksonUtil;
+import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
-import cn.com.gffunds.commons.json.JacksonUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import com.alibaba.nacos.common.utils.CollectionUtils;
-import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
-import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
@@ -24,30 +24,44 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author hezhc
  * @date 2023/2/14 15:06
  * @description 消息消费者，用于封装WebSocketSession
  */
-@Data
+@Getter
+@Setter
 @Accessors(chain = true)
 @Slf4j
 @Component
 @Scope("prototype")
 public class MessageConsumer {
-    /** 是否有效(0-无效，1-有效) */
-    private Integer valid;
-    /** 用户信息 */
+    /**
+     * 是否有效(0-无效，1-有效)
+     */
+    private AtomicBoolean valid;
+    /**
+     * 用户信息
+     */
     private UserInfo userInfo;
-    /** 客户端session  */
+    /**
+     * 客户端session
+     */
     private WebSocketSession webSocketSession;
-    /** 对应客户端的订阅数据 */
+    /**
+     * 对应客户端的订阅数据
+     */
     private Map<String, BizMessageManager> bizMessageManagers;
-    /** 重试次数 */
+    /**
+     * 重试次数
+     */
     @Value("${websocket.retry-times:3}")
     private int retryTimes;
-    /** 睡眠时间 */
+    /**
+     * 睡眠时间
+     */
     @Value("${websocket.sleep-millis:3000}")
     private int sleepMillis;
 
@@ -72,20 +86,21 @@ public class MessageConsumer {
         if (this.webSocketSession.isOpen()) {
             if (topics.contains(topic)) {
                 //  重试机制，多次发送失败valid置为0
-               sendMessage(message, retryTimes);
-               return;
+                sendMessage(message, retryTimes);
+                return;
             }
-            // todo 判断主题是否在该客户端订阅列表
+            //  判断主题是否在该客户端订阅列表
             for (String subscribeTopic : topics) {
-                if (subscribeTopic.contains("*") &&
-                        topic.startsWith(subscribeTopic.replace("*", ""))) {
+                if (subscribeTopic.contains("*") && (
+                        topic.startsWith(subscribeTopic.replace("*", "")) ||
+                        topic.endsWith(subscribeTopic.replace("*", "")))) {
                     //  重试机制，多次发送失败valid置为0
                     sendMessage(message, retryTimes);
                     return;
                 }
             }
         } else {
-            this.valid = WebSocketConstants.INVALID;
+            this.closeConnection();
         }
     }
 
@@ -96,7 +111,7 @@ public class MessageConsumer {
     @SneakyThrows
     private void sendMessage(Message message, int retry) {
         boolean flag = false;
-        retry ++;
+        retry++;
         while (!flag && retry-- > 0) {
             try {
                 this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
@@ -107,7 +122,7 @@ public class MessageConsumer {
             }
         }
         if (!flag) {
-            this.valid = WebSocketConstants.INVALID;
+            this.closeConnection();
         }
     }
 
@@ -155,17 +170,18 @@ public class MessageConsumer {
         }
     }
 
+
+
     /**
      * 关闭连接，置为不可用
      */
     @SneakyThrows
-    public void closeConnection() {
-        this.valid = WebSocketConstants.INVALID;
+    public synchronized void closeConnection() {
+        this.setValid(WebSocketConstants.INVALID);
         this.bizMessageManagers = null;
         this.userInfo = null;
         if (this.webSocketSession != null && this.webSocketSession.isOpen()) {
             this.webSocketSession.close();
         }
     }
-
 }

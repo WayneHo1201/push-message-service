@@ -1,6 +1,9 @@
 package cn.com.gffunds.pushmessage.exception;
 
 
+import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
+import lombok.*;
+
 /**
  * @description: 自定义异常信息的异常类
  * @author: Wu Teng
@@ -9,15 +12,17 @@ package cn.com.gffunds.pushmessage.exception;
  * @modified By：
  * @version: 1.0.0$
  */
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 public class PushMessageException extends Exception{
-    private final String errorReason;
+    private String errorReason;
+    private String errorCode;
 
     public PushMessageException(String errorReason) {
         this.errorReason = errorReason;
-    }
-
-    public String getMessage() {
-        return this.errorReason;
+        this.errorCode = ErrCodeEnum.INTERNAL_SERVER_ERROR.code();
     }
 
 }

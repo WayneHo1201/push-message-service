@@ -40,10 +40,10 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(PushMessageException.class)
-    public ReturnResult exceptionHandler(Exception e) {
+    public ReturnResult exceptionHandler(PushMessageException e) {
         //打印异常堆栈到日志
         log.error(e.getMessage(), e);
-        return new ReturnResult<>(ErrCodeEnum.INTERNAL_SERVER_ERROR);
+        return new ReturnResult<>(e.getErrorCode(), e.getErrorReason());
     }
 
     @ResponseStatus(HttpStatus.OK)
