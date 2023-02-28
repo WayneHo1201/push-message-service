@@ -15,13 +15,11 @@ import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Scope("prototype")
 public class MessageConsumer {
     /**
-     * 是否有效(0-无效，1-有效)
+     * 是否有效
      */
     private AtomicBoolean valid;
     /**
@@ -56,16 +54,12 @@ public class MessageConsumer {
      * 对应客户端的订阅数据
      */
     private Map<String, BizMessageManager> bizMessageManagers;
+
     /**
-     * 重试次数
+     * 创建时间
      */
-    @Value("${websocket.retry-times:3}")
-    private int retryTimes;
-    /**
-     * 睡眠时间
-     */
-    @Value("${websocket.sleep-millis:3000}")
-    private int sleepMillis;
+    private String createTime;
+
 
     @Autowired
     private MessageDispatcher messageDispatcher;
@@ -80,51 +74,8 @@ public class MessageConsumer {
      */
     @SneakyThrows
     public synchronized void consume(Message message) {
-        // 获取业务
-        String bizId = message.getBizId();
-        String topic = message.getTopic();
-        BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
-        Set<String> topics = bizMessageManager.getTopics();
-        if (this.webSocketSession.isOpen()) {
-            if (topics.contains(topic)) {
-                //  重试机制，多次发送失败valid置为0
-                sendMessage(message, retryTimes);
-                return;
-            }
-            //  判断主题是否在该客户端订阅列表
-            for (String subscribeTopic : topics) {
-                if (subscribeTopic.contains("*") && (
-                        topic.startsWith(subscribeTopic.replace("*", "")) ||
-                        topic.endsWith(subscribeTopic.replace("*", "")))) {
-                    //  重试机制，多次发送失败valid置为0
-                    sendMessage(message, retryTimes);
-                    return;
-                }
-            }
-        } else {
-            this.closeConnection();
-        }
-    }
-
-
-    /**
-     * 重试发送
-     */
-    @SneakyThrows
-    private void sendMessage(Message message, int retry) {
-        boolean flag = false;
-        retry++;
-        while (!flag && retry-- > 0) {
-            try {
-                this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
-                flag = true;
-            } catch (IOException e) {
-                log.error(String.format("消息发送失败！将会重试 %d 次", retry), e);
-                Thread.sleep(sleepMillis);
-            }
-        }
-        if (!flag) {
-            this.closeConnection();
+        if (isSubscribed(message)) {
+            this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
         }
     }
 
@@ -191,7 +142,6 @@ public class MessageConsumer {
     }
 
 
-
     /**
      * 关闭连接，置为不可用
      */
@@ -203,5 +153,42 @@ public class MessageConsumer {
         if (this.webSocketSession != null && this.webSocketSession.isOpen()) {
             this.webSocketSession.close();
         }
+    }
+
+    /**
+     * 判断是否可用
+     */
+    public boolean isValid() {
+        return this.valid.equals(WebSocketConstants.VALID);
+    }
+
+
+    /**
+     * 判断是否可用
+     */
+    public boolean isSubscribed(Message message) {
+        // 获取业务
+        String bizId = message.getBizId();
+        String topic = message.getTopic();
+        BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
+        Set<String> topics = bizMessageManager.getTopics();
+        if (this.webSocketSession.isOpen()) {
+            if (topics.contains(topic)) {
+                return true;
+            }
+            //  判断主题是否在该客户端订阅列表
+            for (String subscribeTopic : topics) {
+                if (subscribeTopic.contains("*") &&
+                        (topic.startsWith(subscribeTopic.replace("*", "")) ||
+                                topic.endsWith(subscribeTopic.replace("*", "")))) {
+                    //  重试机制，多次发送失败valid置为0
+                    return true;
+                }
+            }
+        } else {
+            this.closeConnection();
+            return false;
+        }
+        return false;
     }
 }

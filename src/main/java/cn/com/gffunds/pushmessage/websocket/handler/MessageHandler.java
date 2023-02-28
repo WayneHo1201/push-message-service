@@ -1,6 +1,6 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
-import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.util.SendMessageThreadPool;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.hutool.core.collection.ConcurrentHashSet;
@@ -53,11 +53,11 @@ public class MessageHandler {
         boolean flag = false;
         while (iterator.hasNext()) {
             MessageConsumer messageConsumer = iterator.next();
-            if (messageConsumer.getValid() == WebSocketConstants.INVALID) {
+            if (messageConsumer.isValid()) {
                 flag = true;
                 continue;
             }
-            messageConsumer.consume(message);
+            SendMessageThreadPool.runAsyncNoException(() -> messageConsumer.consume(message));
         }
         if (flag) {
             removeInvalidObserver();
@@ -65,8 +65,8 @@ public class MessageHandler {
 
     }
 
-    private synchronized void removeInvalidObserver() {
-        consumerSet.removeIf(messageConsumer -> messageConsumer.getValid() == WebSocketConstants.INVALID);
+    public synchronized void removeInvalidObserver() {
+        consumerSet.removeIf(MessageConsumer::isValid);
     }
 
     /**
