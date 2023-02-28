@@ -3,12 +3,16 @@ package cn.com.gffunds.pushmessage.service;
 import cn.com.gffunds.pushmessage.config.DefaultRedisProperties;
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
+import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.hutool.core.collection.ConcurrentHashSet;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -19,6 +23,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class RefreshService {
+    @Autowired
+    private MessageDispatcher messageDispatcher;
     /**
      * 刷新配置
      */
@@ -31,6 +37,12 @@ public class RefreshService {
                     .stream()
                     .map(topic -> bizId + WebSocketConstants.SEPARATOR + topic)
                     .collect(Collectors.toSet()));
+            Map<String, MessageHandler> map = messageDispatcher.getDispatcherMap();
+            if (!map.containsKey(bizId)) {
+                MessageHandler messageHandler = new MessageHandler();
+                messageHandler.setBizId(bizId);
+                map.put(bizId, messageHandler);
+            }
         }
         for (String subscribe : subscribes) {
             container.addMessageListener(listener, new ChannelTopic(subscribe));
