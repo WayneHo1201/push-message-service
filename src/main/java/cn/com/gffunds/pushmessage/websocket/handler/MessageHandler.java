@@ -53,7 +53,7 @@ public class MessageHandler {
         boolean flag = false;
         while (iterator.hasNext()) {
             MessageConsumer messageConsumer = iterator.next();
-            if (messageConsumer.isValid()) {
+            if (!messageConsumer.isValid()) {
                 flag = true;
                 continue;
             }
@@ -66,7 +66,7 @@ public class MessageHandler {
     }
 
     public synchronized void removeInvalidObserver() {
-        consumerSet.removeIf(MessageConsumer::isValid);
+        consumerSet.removeIf(consumer -> !consumer.isValid());
     }
 
     /**

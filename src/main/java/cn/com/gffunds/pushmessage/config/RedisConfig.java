@@ -10,7 +10,6 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -49,7 +48,7 @@ public class RedisConfig {
     @Bean("irmRedisConnectionFactory")
     @Primary
     public LettuceConnectionFactory irmRedisConnectionFactory() {
-       return defaultRedisConnectionFactory(irmRedisProperties);
+        return defaultRedisConnectionFactory(irmRedisProperties);
     }
 
     @Bean("ipmRedisTemplate")
@@ -120,10 +119,6 @@ public class RedisConfig {
     }
 
 
-
-
-
-
     /**
      * 自定义 redisTemplate （方法名一定要叫 redisTemplate 因为 @Bean 是根据方法名配置这个bean的name的）
      * 默认的 RedisTemplate<K,V> 为泛型，使用时不太方便，自定义为 <String, Object>
@@ -158,18 +153,16 @@ public class RedisConfig {
     }
 
 
-
     @SneakyThrows
     private List<RedisNode> createSentinels(DefaultRedisProperties.Sentinel sentinel) {
         List<RedisNode> nodes = new ArrayList<>();
         for (String node : sentinel.getNodes()) {
             try {
                 String[] parts = StringUtils.split(node, ":");
-                Assert.state(parts.length == 2, "Must be defined as 'host:port'");
+                Assert.state(parts != null && parts.length == 2, "Must be defined as 'host:port'");
                 nodes.add(new RedisNode(parts[0], Integer.parseInt(parts[1])));
-            }
-            catch (RuntimeException ex) {
-                throw new PushMessageException("Invalid redis sentinel property '" + node + "'");
+            } catch (RuntimeException ex) {
+                throw new IllegalStateException("Invalid redis sentinel property '" + node + "'");
             }
         }
         return nodes;

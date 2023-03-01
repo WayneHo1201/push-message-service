@@ -15,9 +15,7 @@ import java.util.function.Supplier;
 public class SendMessageThreadPool implements ApplicationListener<ContextStoppedEvent> {
 
     /**
-     * 在计算密集项目为2n
-     * 在IO密集项目为n+1
-     * 由于此线程池是调用ksb，所以应该是IO密集
+     * 发送消息线程池
      */
     private static final ExecutorService POOL = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),

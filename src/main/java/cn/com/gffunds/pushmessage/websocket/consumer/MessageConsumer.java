@@ -8,6 +8,7 @@ import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
+import cn.hutool.core.date.DateUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -58,7 +59,7 @@ public class MessageConsumer {
     /**
      * 创建时间
      */
-    private String createTime;
+    private String createTime = DateUtil.now();
 
 
     @Autowired
@@ -74,8 +75,12 @@ public class MessageConsumer {
      */
     @SneakyThrows
     public synchronized void consume(Message message) {
-        if (isSubscribed(message)) {
-            this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
+        if (this.webSocketSession.isOpen()) {
+            if (isSubscribed(message)) {
+                this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
+            }
+        } else {
+            this.closeConnection();
         }
     }
 
@@ -159,12 +164,12 @@ public class MessageConsumer {
      * 判断是否可用
      */
     public boolean isValid() {
-        return this.valid.equals(WebSocketConstants.VALID);
+        return this.valid.get() == WebSocketConstants.VALID.get();
     }
 
 
     /**
-     * 判断是否可用
+     * 判断该消费者是否订阅该信息
      */
     public boolean isSubscribed(Message message) {
         // 获取业务
@@ -172,22 +177,16 @@ public class MessageConsumer {
         String topic = message.getTopic();
         BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
         Set<String> topics = bizMessageManager.getTopics();
-        if (this.webSocketSession.isOpen()) {
-            if (topics.contains(topic)) {
+        if (topics.contains(topic)) {
+            return true;
+        }
+        //  判断主题是否在该客户端订阅列表
+        for (String subscribeTopic : topics) {
+            if (subscribeTopic.contains("*")
+                    && (topic.startsWith(subscribeTopic.replace("*", ""))
+                    || topic.endsWith(subscribeTopic.replace("*", "")))) {
                 return true;
             }
-            //  判断主题是否在该客户端订阅列表
-            for (String subscribeTopic : topics) {
-                if (subscribeTopic.contains("*") &&
-                        (topic.startsWith(subscribeTopic.replace("*", "")) ||
-                                topic.endsWith(subscribeTopic.replace("*", "")))) {
-                    //  重试机制，多次发送失败valid置为0
-                    return true;
-                }
-            }
-        } else {
-            this.closeConnection();
-            return false;
         }
         return false;
     }

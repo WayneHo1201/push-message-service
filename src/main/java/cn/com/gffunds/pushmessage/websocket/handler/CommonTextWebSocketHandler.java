@@ -45,8 +45,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         MessageConsumer messageConsumer = SpringUtil.getBean("messageConsumer", MessageConsumer.class);
         messageConsumer.setUserInfo(userInfo)
                 .setWebSocketSession(webSocketSession)
-                .setValid(new AtomicBoolean(true))
-                .setCreateTime(DateUtil.now());
+                .setValid(new AtomicBoolean(true));
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
     }
