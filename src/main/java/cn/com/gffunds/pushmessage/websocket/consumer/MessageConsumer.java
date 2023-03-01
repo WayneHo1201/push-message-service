@@ -164,7 +164,7 @@ public class MessageConsumer {
      * 判断是否可用
      */
     public boolean isValid() {
-        return this.valid.get() == WebSocketConstants.VALID.get();
+        return this.valid.get();
     }
 
 
