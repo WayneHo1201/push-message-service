@@ -20,21 +20,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        //todo handler是webSocket的核心，配置入口
+        // handler是webSocket的核心，配置入口
         registry.addHandler(commonTextWebSocketHandler, "/websocket")
                 .setAllowedOrigins("*")
                 .addInterceptors(webSocketInterceptor);
     }
-
-    /**
-     * for test 构造GFHttpClient
-     */
-    @Bean("ssoGfHttpClient")
-    public GFHttpClient ssoGfHttpClient() {
-        return new GFHttpClient()
-                .setSocketTimeout(3000)
-                .setConnectTime(3000)
-                .setAppId("sso");
-    }
-
 }
