@@ -2,6 +2,7 @@ package cn.com.gffunds.pushmessage.websocket.handler;
 
 import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
+import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
@@ -9,7 +10,6 @@ import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +34,8 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      */
     private static final Map<WebSocketSession, MessageConsumer> SESSION = new ConcurrentHashMap<>();
 
+    private static final String CONSUMER = "messageConsumer";
+
     /**
      * 新增socket
      */
@@ -42,10 +43,9 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession webSocketSession) {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
-        MessageConsumer messageConsumer = SpringUtil.getBean("messageConsumer", MessageConsumer.class);
+        MessageConsumer messageConsumer = SpringUtil.getBean(CONSUMER, MessageConsumer.class);
         messageConsumer.setUserInfo(userInfo)
-                .setWebSocketSession(webSocketSession)
-                .setValid(new AtomicBoolean(true));
+                .setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
     }
@@ -68,12 +68,14 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         log.info("websocket接收到的信息： " + payload);
         // 构造messageRequest
         MessageRequest messageRequest;
+        MessageResponse response;
         try {
             messageRequest = JacksonUtil.toObject(payload, MessageRequest.class);
         } catch (JsonDeserializerException e) {
-            String msg = String.format("请求消息不合法！payload=%s", payload);
+            String msg = String.format("请求消息解析异常！payload=%s", payload);
             log.error(msg);
-            sendMessage(webSocketSession, new TextMessage(msg));
+            response = new MessageResponse().setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
+            sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
             return;
         }
         String msgId = messageRequest.getMsgId();
@@ -82,10 +84,9 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
         // 构建命令返回对象
-        MessageResponse response = new MessageResponse()
+         response = new MessageResponse()
                 .setMsgId(msgId)
-                .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND)
-                .setSuccess(WebSocketConstants.MSG_SUCCESS);
+                .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
         //  通用消息返回
         if (WebSocketConstants.SUBSCRIBE.equals(command)) {
@@ -97,7 +98,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         } else {
             String msg = String.format("不支持该命令！command=%s", command);
             log.error(msg);
-            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
+            response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
         }
         sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
     }
@@ -117,18 +118,13 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      */
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        MessageConsumer messageConsumer = SESSION.get(session);
-        messageConsumer.closeConnection();
-        SESSION.remove(session);
-        //获取用户信息
+        close(session);
         log.info("连接已关闭：" + status);
     }
 
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-        if (session.isOpen()) {
-            session.close();
-        }
+        close(session);
         log.error("连接出错", exception);
     }
 
@@ -136,5 +132,22 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     public boolean supportsPartialMessages() {
         return false;
     }
+
+    /**
+     * 清空session
+     */
+    private void close(WebSocketSession session) throws Exception {
+        MessageConsumer messageConsumer = SESSION.get(session);
+        if (messageConsumer != null) {
+            messageConsumer.closeConnection();
+            SESSION.remove(session);
+        } else {
+            if (session.isOpen()) {
+                session.close();
+            }
+        }
+    }
+
+
 
 }

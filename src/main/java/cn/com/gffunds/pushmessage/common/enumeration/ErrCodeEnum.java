@@ -35,7 +35,12 @@ public enum ErrCodeEnum {
     /**
      * 鉴权异常
      */
-    TOKEN_INCORRECT("U0101", "TOKEN_INCORRECT"),
+    TOKEN_INCORRECT("U0401", "TOKEN_INCORRECT"),
+
+    /**
+     * 业务逻辑部分异常
+     */
+    PARTIAL_INCORRECT("B0002", "PARTIAL_INCORRECT"),
     ;
 
     private String code;

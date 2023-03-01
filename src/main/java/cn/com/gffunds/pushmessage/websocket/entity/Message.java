@@ -21,6 +21,8 @@ public class Message {
     private String topic;
     /** 消息体 */
     private Object data;
-    /** 息接收时间 */
+    /** 消息接收时间 */
     private String receiveTime;
+    /** 消息推送时间 */
+    private String pushTime;
 }

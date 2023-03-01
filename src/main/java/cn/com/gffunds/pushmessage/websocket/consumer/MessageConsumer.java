@@ -1,7 +1,7 @@
 package cn.com.gffunds.pushmessage.websocket.consumer;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
-import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
+import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
@@ -42,7 +42,7 @@ public class MessageConsumer {
     /**
      * 是否有效
      */
-    private AtomicBoolean valid;
+    private AtomicBoolean valid = new AtomicBoolean(true);
     /**
      * 用户信息
      */
@@ -75,11 +75,18 @@ public class MessageConsumer {
      */
     @SneakyThrows
     public synchronized void consume(Message message) {
-        if (this.webSocketSession.isOpen()) {
-            if (isSubscribed(message)) {
-                this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
+        try {
+            if (this.webSocketSession.isOpen()) {
+                if (isSubscribed(message)) {
+                    message.setPushTime(DateUtil.now());
+                    this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
+                    log.info("消息推送成功！用户：{}, 内容：{}", userInfo.getUsername(), message);
+                }
+            } else {
+                this.closeConnection();
             }
-        } else {
+        } catch (Exception e) {
+            log.error("推送消息异常！", e);
             this.closeConnection();
         }
     }
@@ -111,7 +118,11 @@ public class MessageConsumer {
         if (!CollectionUtils.isEmpty(bizIdSet)) {
             String msg = String.format("客户端订阅的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
             log.warn(msg);
-            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
+            if (bizMessageManagerMap.size() == bizIdSet.size()) {
+                response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
+            } else {
+                response.setCode(ErrCodeEnum.PARTIAL_INCORRECT.code()).setData(msg);
+            }
         }
     }
 
@@ -142,7 +153,11 @@ public class MessageConsumer {
         if (!CollectionUtils.isEmpty(bizIdSet)) {
             String msg = String.format("客户端退订的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
             log.warn(msg);
-            response.setSuccess(WebSocketConstants.MSG_FAIL).setData(msg);
+            if (bizMessageManagerMap.size() == bizIdSet.size()) {
+                response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
+            } else {
+                response.setCode(ErrCodeEnum.PARTIAL_INCORRECT.code()).setData(msg);
+            }
         }
     }
 
@@ -152,7 +167,7 @@ public class MessageConsumer {
      */
     @SneakyThrows
     public synchronized void closeConnection() {
-        this.setValid(WebSocketConstants.INVALID);
+        this.valid.set(false);
         this.bizMessageManagers = null;
         this.userInfo = null;
         if (this.webSocketSession != null && this.webSocketSession.isOpen()) {

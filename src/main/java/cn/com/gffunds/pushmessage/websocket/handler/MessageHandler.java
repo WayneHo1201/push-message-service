@@ -1,14 +1,18 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
+import cn.com.gffunds.pushmessage.constants.MDCConstants;
 import cn.com.gffunds.pushmessage.util.SendMessageThreadPool;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author hezhc
@@ -17,6 +21,7 @@ import java.util.Set;
  */
 @Getter
 @Setter
+@Slf4j
 public class MessageHandler {
     private String bizId;
     private Set<MessageConsumer> consumerSet;
@@ -30,6 +35,7 @@ public class MessageHandler {
      */
     public void registerObserver(MessageConsumer messageConsumer) {
         consumerSet.add(messageConsumer);
+
     }
 
     /**
@@ -49,10 +55,8 @@ public class MessageHandler {
      * 通知合法订阅者
      */
     public void notifyObservers(Message message) {
-        Iterator<MessageConsumer> iterator = consumerSet.iterator();
         boolean flag = false;
-        while (iterator.hasNext()) {
-            MessageConsumer messageConsumer = iterator.next();
+        for (MessageConsumer messageConsumer : consumerSet) {
             if (!messageConsumer.isValid()) {
                 flag = true;
                 continue;
@@ -73,6 +77,9 @@ public class MessageHandler {
      * 接收消息源信息
      */
     public void receiveMessage(Message message) {
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+        //设置traceId值
+        MDC.put(MDCConstants.TRACE_ID, uuid);
         this.notifyObservers(message);
     }
 }

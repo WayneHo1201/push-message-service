@@ -1,5 +1,6 @@
 package cn.com.gffunds.pushmessage.websocket.entity;
 
+import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -16,7 +17,7 @@ public class MessageResponse {
     /** 消息id */
     private String msgId;
     /** 是否成功 */
-    private String success;
+    private String code = ErrCodeEnum.SUCCESS.code();
     /** 消息体 */
     private String data;
 }
