@@ -14,8 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.Topic;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -47,21 +48,7 @@ public class SubscribeConfig {
      */
     @Bean("irmRedisMessageListenerContainer")
     public RedisMessageListenerContainer irmRedisMessageListenerContainer(IrmRedisMessageListener listener) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(irmRedisConnectionFactory);
-        //订阅频道 这个container可以添加多个messageListener
-        Set<String> subscribes = new ConcurrentHashSet<>();
-        for (BizTopic redisSubscribes : irmRedisProperties.getSubscribes()) {
-            String bizId = redisSubscribes.getBizId();
-            subscribes.addAll(redisSubscribes.getTopics()
-                    .stream()
-                    .map(topic -> bizId + WebSocketConstants.SEPARATOR + topic)
-                    .collect(Collectors.toSet()));
-        }
-        for (String subscribe : subscribes) {
-            container.addMessageListener(listener, new ChannelTopic(subscribe));
-        }
-        return container;
+        return generateRedisMessageListenerContainer(listener, irmRedisConnectionFactory, irmRedisProperties);
     }
 
     /**
@@ -69,22 +56,10 @@ public class SubscribeConfig {
      */
     @Bean("ipmRedisMessageListenerContainer")
     public RedisMessageListenerContainer ipmRedisMessageListenerContainer(IpmRedisMessageListener listener) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(ipmRedisConnectionFactory);
-        //订阅频道 这个container可以添加多个messageListener
-        Set<String> subscribes = new ConcurrentHashSet<>();
-        for (BizTopic redisSubscribes : ipmRedisProperties.getSubscribes()) {
-            String bizId = redisSubscribes.getBizId();
-            subscribes.addAll(redisSubscribes.getTopics()
-                    .stream()
-                    .map(topic -> bizId + WebSocketConstants.SEPARATOR + topic)
-                    .collect(Collectors.toSet()));
-        }
-        for (String subscribe : subscribes) {
-            container.addMessageListener(listener, new ChannelTopic(subscribe));
-        }
-        return container;
+        return generateRedisMessageListenerContainer(listener, ipmRedisConnectionFactory, ipmRedisProperties);
     }
+
+
 
     /**
      * 构造分发器（若有新数据源接入需要新增构建逻辑）
@@ -105,4 +80,32 @@ public class SubscribeConfig {
         return new MessageDispatcher(map);
     }
 
+
+    /**
+     * 构造container
+     */
+    private RedisMessageListenerContainer generateRedisMessageListenerContainer(AbstractRedisMessageListener listener
+            , RedisConnectionFactory redisConnectionFactory, DefaultRedisProperties redisProperties) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(redisConnectionFactory);
+        Set<Topic> subscribes = generateTopics(redisProperties);
+        container.addMessageListener(listener, subscribes);
+        return container;
+    }
+
+    /**
+     * 构造订阅信息
+     */
+    public Set<Topic> generateTopics(DefaultRedisProperties redisProperties) {
+        //订阅频道 这个container可以添加多个messageListener
+        Set<Topic> subscribes = new ConcurrentHashSet<>();
+        for (BizTopic redisSubscribes : redisProperties.getSubscribes()) {
+            String bizId = redisSubscribes.getBizId();
+            subscribes.addAll(redisSubscribes.getTopics()
+                    .stream()
+                    .map(topic -> new PatternTopic(bizId + WebSocketConstants.SEPARATOR + topic))
+                    .collect(Collectors.toSet()));
+        }
+        return subscribes;
+    }
 }

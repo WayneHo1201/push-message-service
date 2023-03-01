@@ -2,17 +2,11 @@ package cn.com.gffunds.pushmessage.controller;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.config.IpmRedisProperties;
-import cn.com.gffunds.pushmessage.config.IrmRedisProperties;
-import cn.com.gffunds.pushmessage.listener.IpmRedisMessageListener;
-import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
 import cn.com.gffunds.pushmessage.service.RefreshService;
-import cn.hutool.extra.spring.SpringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -51,14 +45,6 @@ public class RedisMessageController {
     }
 
 
-    @Resource
-    private IrmRedisMessageListener irmRedisMessageListener;
-    @Resource
-    private IpmRedisMessageListener ipmRedisMessageListener;
-    @Autowired
-    private IrmRedisProperties irmRedisProperties;
-    @Autowired
-    private IpmRedisProperties ipmRedisProperties;
     @Autowired
     private RefreshService refreshService;
 
@@ -67,11 +53,7 @@ public class RedisMessageController {
      */
     @GetMapping("/refresh")
     public ReturnResult<String> refresh() {
-        RedisMessageListenerContainer irmContainer = SpringUtil.getBean("irmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
-        RedisMessageListenerContainer ipmContainer = SpringUtil.getBean("ipmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
-        refreshService.redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
-        refreshService.redisConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
-        String msg = "刷新redis订阅配置！";
-        return new ReturnResult<>(msg);
+        refreshService.refresh();
+        return new ReturnResult<>();
     }
 }
