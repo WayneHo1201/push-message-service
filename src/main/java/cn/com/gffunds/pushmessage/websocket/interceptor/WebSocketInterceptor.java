@@ -45,6 +45,10 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         if (enable) {
             UserInfo userInfo = userService.getUserInfo(token);
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
+        } else {
+            // todo for test
+            UserInfo userInfo = new UserInfo().setUsername("guxh");
+            attributes.put(WebSocketConstants.ATTR_USER, userInfo);
         }
         //从request里面获取对象，存放attributes
         return super.beforeHandshake(request, response, wsHandler, attributes);

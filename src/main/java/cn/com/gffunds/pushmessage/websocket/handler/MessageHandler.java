@@ -7,10 +7,10 @@ import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.hutool.core.collection.ConcurrentHashSet;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,6 +22,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Slf4j
+@Accessors(chain = true)
 public class MessageHandler {
     private String bizId;
     private Set<MessageConsumer> consumerSet;

@@ -19,5 +19,5 @@ public class MessageResponse {
     /** 是否成功 */
     private String code = ErrCodeEnum.SUCCESS.code();
     /** 消息体 */
-    private String data;
+    private String data = ErrCodeEnum.SUCCESS.msg();
 }

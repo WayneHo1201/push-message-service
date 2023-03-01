@@ -195,7 +195,7 @@ public class MessageConsumer {
         if (topics.contains(topic)) {
             return true;
         }
-        //  判断主题是否在该客户端订阅列表
+        //  todo 通配符匹配 判断主题是否在该客户端订阅列表
         for (String subscribeTopic : topics) {
             if (subscribeTopic.contains("*")
                     && (topic.startsWith(subscribeTopic.replace("*", ""))
