@@ -23,7 +23,7 @@ public class PrometheusMeterAspect {
     /**
      * redis消息监听
      */
-    @Pointcut("execution(public * cn.com.gffunds.pushmessage..RedisMessageListener.onMessage(..))")
+    @Pointcut("execution(public * cn.com.gffunds.pushmessage.listener.*.onMessage(..))")
     public void redisOnMessage() {}
 
     /**
@@ -35,7 +35,7 @@ public class PrometheusMeterAspect {
     /**
      * 客户端退订
      */
-    @Pointcut("execution(public * cn.com.gffunds.pushmessage..RedisMessageListener.unsubscribe(..))")
+    @Pointcut("execution(public * cn.com.gffunds.pushmessage..MessageConsumer.unsubscribe(..))")
     public void unsubscribe() {}
 
     /**
