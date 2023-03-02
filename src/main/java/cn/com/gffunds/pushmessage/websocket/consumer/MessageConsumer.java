@@ -2,6 +2,7 @@ package cn.com.gffunds.pushmessage.websocket.consumer;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
+import cn.com.gffunds.pushmessage.config.LogConfig;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.Message;
 import cn.com.gffunds.pushmessage.websocket.entity.MessageResponse;
@@ -9,6 +10,7 @@ import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import cn.hutool.core.date.DateUtil;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -61,6 +63,8 @@ public class MessageConsumer {
      */
     private String createTime = DateUtil.now();
 
+    @Autowired
+    private LogConfig logConfig;
 
     @Autowired
     private MessageDispatcher messageDispatcher;
@@ -78,9 +82,12 @@ public class MessageConsumer {
         try {
             if (this.webSocketSession.isOpen()) {
                 if (isSubscribed(message)) {
-                    message.setPushTime(DateUtil.now());
-                    this.webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(message)));
-                    log.info("消息推送成功！用户：{}, 内容：{}", userInfo.getUsername(), message);
+                    ObjectNode node = JacksonUtil.getObjectMapper().convertValue(message, ObjectNode.class);
+                    node.put("pushTime", DateUtil.now());
+                    this.webSocketSession.sendMessage(new TextMessage(node.toString()));
+                    if (logConfig.isLogEnable()) {
+                        log.info("消息推送成功！用户：{}, 内容：{}", userInfo.getUsername(), node);
+                    }
                 }
             } else {
                 this.closeConnection();

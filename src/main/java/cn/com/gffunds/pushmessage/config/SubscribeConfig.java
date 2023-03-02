@@ -19,10 +19,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -98,7 +95,7 @@ public class SubscribeConfig {
      */
     public Set<Topic> generateTopics(DefaultRedisProperties redisProperties) {
         //订阅频道 这个container可以添加多个messageListener
-        Set<Topic> subscribes = new ConcurrentHashSet<>();
+        Set<Topic> subscribes = new HashSet<>();
         for (BizTopic redisSubscribes : redisProperties.getSubscribes()) {
             String bizId = redisSubscribes.getBizId();
             subscribes.addAll(redisSubscribes.getTopics()

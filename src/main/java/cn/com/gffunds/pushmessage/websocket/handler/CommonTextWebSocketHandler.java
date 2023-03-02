@@ -84,7 +84,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
         // 构建命令返回对象
-         response = new MessageResponse()
+        response = new MessageResponse()
                 .setMsgId(msgId)
                 .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
@@ -147,7 +147,6 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             }
         }
     }
-
 
 
 }
