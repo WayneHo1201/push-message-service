@@ -7,7 +7,6 @@ import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
-import cn.hutool.core.collection.ConcurrentHashSet;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +54,6 @@ public class SubscribeConfig {
     public RedisMessageListenerContainer ipmRedisMessageListenerContainer(IpmRedisMessageListener listener) {
         return generateRedisMessageListenerContainer(listener, ipmRedisConnectionFactory, ipmRedisProperties);
     }
-
 
 
     /**

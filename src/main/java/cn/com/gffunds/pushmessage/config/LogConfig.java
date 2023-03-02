@@ -14,6 +14,6 @@ import org.springframework.context.annotation.Configuration;
 @RefreshScope
 @Data
 public class LogConfig {
-    @Value("${log.enable}")
+    @Value("${log.enable:false}")
     private boolean logEnable;
 }
