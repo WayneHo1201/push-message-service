@@ -52,7 +52,6 @@ public class UserService {
         }
         // 构建token
         String uuid = IdUtil.randomUUID().replace("-", "");
-        //String uuid = "test";
         // 获取用户信息
         UserInfo userInfo = JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
         redisTemplate.opsForValue().set(uuid, userInfo, expireTime, TimeUnit.SECONDS);

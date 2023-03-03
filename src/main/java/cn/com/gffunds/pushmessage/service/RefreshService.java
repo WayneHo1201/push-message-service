@@ -70,9 +70,7 @@ public class RefreshService {
     private void dispatcherRefresh(Set<String> bizIdSet) {
         Map<String, MessageHandler> dispatcherMap = messageDispatcher.getDispatcherMap();
         for (String bizId : bizIdSet) {
-            if (!dispatcherMap.containsKey(bizId)) {
-                dispatcherMap.put(bizId, new MessageHandler().setBizId(bizId));
-            }
+            dispatcherMap.putIfAbsent(bizId, new MessageHandler().setBizId(bizId));
         }
         dispatcherMap.entrySet().removeIf(entry -> !bizIdSet.contains(entry.getKey()));
     }

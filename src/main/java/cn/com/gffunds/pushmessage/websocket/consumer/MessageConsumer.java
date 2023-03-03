@@ -20,6 +20,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -57,6 +58,11 @@ public class MessageConsumer {
      * 对应客户端的订阅数据
      */
     private Map<String, BizMessageManager> bizMessageManagers;
+
+    /**
+     * 通配符匹配
+     */
+    private AntPathMatcher matcher = new AntPathMatcher();
 
     /**
      * 创建时间
@@ -202,11 +208,9 @@ public class MessageConsumer {
         if (topics.contains(topic)) {
             return true;
         }
-        //  todo 通配符匹配 判断主题是否在该客户端订阅列表
+        //   ant通配符匹配 判断主题是否在该客户端订阅列表
         for (String subscribeTopic : topics) {
-            if (subscribeTopic.contains("*")
-                    && (topic.startsWith(subscribeTopic.replace("*", ""))
-                    || topic.endsWith(subscribeTopic.replace("*", "")))) {
+            if (matcher.match(subscribeTopic, topic)) {
                 return true;
             }
         }
