@@ -30,4 +30,6 @@ public class WebSocketConstants {
     public static final String SESSION_ID = "sessionId";
     /** sso鉴权路径 */
     public static final String AUTHORIZATION_URL = "/sso/authorize";
+    /** ping */
+    public static final String PING = "ping";
 }

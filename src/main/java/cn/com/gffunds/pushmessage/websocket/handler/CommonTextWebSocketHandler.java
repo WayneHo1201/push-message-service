@@ -79,6 +79,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
             return;
         }
+        if (WebSocketConstants.PING.equals(messageRequest.getCommand())) {
+            log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
+            return;
+        }
         String msgId = messageRequest.getMsgId();
         List<BizTopic> bizTopics = messageRequest.getBizTopics();
         // 构建bizMessageManagerMap
