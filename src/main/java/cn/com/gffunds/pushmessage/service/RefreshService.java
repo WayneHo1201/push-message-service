@@ -11,13 +11,15 @@ import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.hutool.extra.spring.SpringUtil;
-import com.liferay.portal.kernel.util.ListUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -51,7 +53,9 @@ public class RefreshService {
         RedisMessageListenerContainer ipmContainer = SpringUtil.getBean("ipmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
         redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
         redisConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
-        Set<String> bizIdSet = ListUtil.concat(irmRedisProperties.getSubscribes(), ipmRedisProperties.getSubscribes()).stream().map(BizTopic::getBizId).collect(Collectors.toSet());
+        List<BizTopic> list = new ArrayList<>(irmRedisProperties.getSubscribes());
+        list.addAll(ipmRedisProperties.getSubscribes());
+        Set<String> bizIdSet = list.stream().map(BizTopic::getBizId).collect(Collectors.toSet());
         dispatcherRefresh(bizIdSet);
     }
 

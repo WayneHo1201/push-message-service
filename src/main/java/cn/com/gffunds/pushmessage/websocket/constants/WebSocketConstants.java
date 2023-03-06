@@ -10,10 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class WebSocketConstants {
     /** 用户属性key */
     public static final String ATTR_USER = "user";
-    /** 订阅 */
-    public static final String SUBSCRIBE = "subscribe";
-    /** 退订 */
-    public static final String UNSUBSCRIBE = "unSubscribe";
     /** 分割符 */
     public static final String SEPARATOR = ":";
     /** 消息类型  */
@@ -30,6 +26,4 @@ public class WebSocketConstants {
     public static final String SESSION_ID = "sessionId";
     /** sso鉴权路径 */
     public static final String AUTHORIZATION_URL = "/sso/authorize";
-    /** ping */
-    public static final String PING = "ping";
 }

@@ -1,5 +1,6 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
+import cn.com.gffunds.pushmessage.websocket.common.enumeration.WebsocketCommandEnum;
 import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
@@ -80,7 +81,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             sendMessage(webSocketSession, response);
             return;
         }
-        if (WebSocketConstants.PING.equals(messageRequest.getCommand())) {
+        if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
             return;
         }
@@ -95,10 +96,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
         //  通用消息返回
-        if (WebSocketConstants.SUBSCRIBE.equals(command)) {
+        if (WebsocketCommandEnum.SUBSCRIBE.code().equals(command)) {
             // 发送订阅通知
             messageConsumer.subscribe(bizMessageManagerMap, response);
-        } else if (WebSocketConstants.UNSUBSCRIBE.equals(command)) {
+        } else if (WebsocketCommandEnum.UNSUBSCRIBE.code().equals(command)) {
             // 发送退订通知
             messageConsumer.unsubscribe(bizMessageManagerMap, response);
         } else {
