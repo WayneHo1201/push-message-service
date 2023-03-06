@@ -13,7 +13,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MessageResponse {
     /** 消息类型，普通消息、命令响应 */
-    private String msgType;
+    private String msgType = "1";
     /** 消息id */
     private String msgId;
     /** 是否成功 */

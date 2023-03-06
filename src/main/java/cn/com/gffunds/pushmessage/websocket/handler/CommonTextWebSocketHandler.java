@@ -49,6 +49,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 .setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
+        sendMessage(webSocketSession, new MessageResponse());
     }
 
 
@@ -76,7 +77,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             String msg = String.format("请求消息解析异常！payload=%s", payload);
             log.error(msg);
             response = new MessageResponse().setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
-            sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
+            sendMessage(webSocketSession, response);
             return;
         }
         if (WebSocketConstants.PING.equals(messageRequest.getCommand())) {
@@ -105,16 +106,16 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             log.error(msg);
             response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
         }
-        sendMessage(webSocketSession, new TextMessage(JacksonUtil.toJson(response)));
+        sendMessage(webSocketSession, response);
     }
 
     /**
      * 发送信息给指定用户
      */
     @SneakyThrows
-    public void sendMessage(WebSocketSession webSocketSession, TextMessage textMessage) {
+    public void sendMessage(WebSocketSession webSocketSession, MessageResponse response) {
         if (webSocketSession.isOpen()) {
-            webSocketSession.sendMessage(textMessage);
+            webSocketSession.sendMessage(new TextMessage(JacksonUtil.toJson(response)));
         }
     }
 
