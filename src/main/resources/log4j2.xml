@@ -51,7 +51,7 @@
                 <!-- 删除处理策略，在配置的路径中搜索，maxDepth 表示往下搜索的最大深度 -->
                 <Delete basePath="${FILE_PATH}/${FILE_NAME}/" maxDepth="2">
                     <!-- 文件名搜索匹配，支持正则 -->
-                    <IfFileName glob="*.log.gz"/>
+                    <IfFileName glob="*.log"/>
                     <!--!Note: 这里的 age 必须和 filePattern 协调, 后者是精确到 dd, 这里就要写成 xd, xD 就不起作用
                     另外, 数字最好 >2, 否则可能造成删除的时候, 最近的文件还处于被占用状态,导致删除不成功!-->
                     <!--7天-->
