@@ -1,20 +1,23 @@
 package cn.com.gffunds.pushmessage.controller;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
-import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.service.RefreshService;
+import cn.com.gffunds.pushmessage.client.WebSocketClient;
+import cn.com.gffunds.pushmessage.websocket.entity.MessageRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
 /**
  * @author hezhc
  * @date 2023/2/14 8:53
- * @description redis推送订阅Controller
+ * @description for test redis推送订阅Controller
  */
 @RestController
 @RequestMapping("/redis_message")
@@ -22,7 +25,7 @@ import javax.annotation.Resource;
 public class RedisMessageController {
 
     /**
-     * for test 测试redis推送消息
+     * 测试redis推送消息
      */
     @Resource
     private RedisTemplate irmRedisTemplate;
@@ -37,6 +40,9 @@ public class RedisMessageController {
     @Resource
     private RedisTemplate ipmRedisTemplate;
 
+    /**
+     * 测试redis推送消息
+     */
     @PostMapping("/send/ipm")
     public String sendIpm(@RequestBody JsonNode jsonNode) {
         String channel = jsonNode.get("channel").asText();
@@ -44,16 +50,15 @@ public class RedisMessageController {
         return "success";
     }
 
-
-    @Autowired
-    private RefreshService refreshService;
-
     /**
-     * 手动刷新redis channel
+     * 发送订阅退订信息
      */
-    @GetMapping("/refresh")
-    public ReturnResult<String> refresh() {
-        refreshService.refresh();
-        return new ReturnResult<>();
+    @Autowired
+    private WebSocketClient webSocketClient;
+
+    @PostMapping("/send")
+    public String send(@RequestBody MessageRequest request) {
+        webSocketClient.send(JacksonUtil.toJson(request));
+        return "success";
     }
 }
