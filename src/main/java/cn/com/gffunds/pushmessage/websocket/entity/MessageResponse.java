@@ -20,4 +20,8 @@ public class MessageResponse {
     private String code = ErrCodeEnum.SUCCESS.code();
     /** 消息体 */
     private String data = ErrCodeEnum.SUCCESS.msg();
+    /** 是否成功 */
+    public boolean isSuccess() {
+        return ErrCodeEnum.SUCCESS.code().equals(code);
+    }
 }
