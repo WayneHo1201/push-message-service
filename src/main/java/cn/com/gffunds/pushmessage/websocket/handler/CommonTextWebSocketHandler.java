@@ -15,9 +15,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
-import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
@@ -67,6 +65,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     /**
      * 处理订阅退订信息
      */
+    @SneakyThrows
     private void handleCommand(WebSocketSession webSocketSession, String payload, MessageConsumer messageConsumer) {
         log.info("websocket接收到的信息： " + payload);
         // 构造messageRequest
@@ -83,6 +82,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         }
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
+            webSocketSession.sendMessage(new PongMessage());
             return;
         }
         String msgId = messageRequest.getMsgId();
