@@ -82,7 +82,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         }
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
-            webSocketSession.sendMessage(new PongMessage());
+            sendMessage(webSocketSession, new MessageResponse().setMsgId(messageRequest.getMsgId()));
             return;
         }
         String msgId = messageRequest.getMsgId();

@@ -1,6 +1,7 @@
 package cn.com.gffunds.pushmessage.websocket.entity;
 
 import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
+import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -13,7 +14,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MessageResponse {
     /** 消息类型，普通消息、命令响应 */
-    private String msgType = "1";
+    private String msgType = WebSocketConstants.MSG_TYPE_COMMAND;
     /** 消息id */
     private String msgId;
     /** 是否成功 */
