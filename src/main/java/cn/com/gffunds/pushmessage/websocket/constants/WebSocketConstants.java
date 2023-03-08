@@ -13,9 +13,9 @@ public class WebSocketConstants {
     /** 分割符 */
     public static final String SEPARATOR = ":";
     /** 消息类型  */
-    public static final String MSG_TYPE_NORMAL = "0";
+    public static final String MSG_TYPE_NORMAL = "biz";
     /** 命令类型 */
-    public static final String MSG_TYPE_COMMAND = "1";
+    public static final String MSG_TYPE_COMMAND = "command";
     /** 合法 */
     public static final AtomicBoolean VALID = new AtomicBoolean(true);
     /** 不合法 */
