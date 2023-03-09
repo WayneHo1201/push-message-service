@@ -18,7 +18,7 @@ public class AuthenticateController {
     private UserService userService;
 
     @GetMapping("/gettoken")
-    public ReturnResult<String> authorize(@RequestParam String sessionId) throws Exception {
+    public ReturnResult<String> authorize(@RequestParam String sessionId) {
         String token = userService.gettoken(sessionId);
         return new ReturnResult<>(token);
     }

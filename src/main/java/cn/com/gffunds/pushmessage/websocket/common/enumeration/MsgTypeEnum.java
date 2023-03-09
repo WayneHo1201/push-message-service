@@ -1,27 +1,23 @@
 package cn.com.gffunds.pushmessage.websocket.common.enumeration;
 
 /**
- * 命令枚举类
+ * 业务信息枚举类
  */
-public enum WebsocketCommandEnum {
+public enum MsgTypeEnum {
     /**
-     * 订阅
+     * 命令响应
      */
-    SUBSCRIBE("subscribe", "订阅"),
+    COMMAND("command", "命令响应"),
     /**
-     * 退订
+     * 业务消息
      */
-    UNSUBSCRIBE("unSubscribe", "退订"),
-    /**
-     * 心跳包
-     */
-    PING("ping", "心跳"),
+    MESSAGE("biz", "业务消息"),
     ;
 
     private final String  code;
     private final String  msg;
 
-    WebsocketCommandEnum(String code, String msg) {
+    MsgTypeEnum(String code, String msg) {
         this.code = code;
         this.msg = msg;
     }

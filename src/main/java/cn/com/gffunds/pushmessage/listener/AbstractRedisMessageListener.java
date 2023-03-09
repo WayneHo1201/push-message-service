@@ -1,6 +1,7 @@
 package cn.com.gffunds.pushmessage.listener;
 
 import cn.com.gffunds.commons.json.JacksonUtil;
+import cn.com.gffunds.pushmessage.websocket.common.enumeration.MsgTypeEnum;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.listener.WebSocketMessageListener;
@@ -61,7 +62,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
                 .setBizId(bizId)
                 .setData(msg)
                 .setTopic(topic)
-                .setMsgType(WebSocketConstants.MSG_TYPE_NORMAL)
+                .setMsgType(MsgTypeEnum.MESSAGE.code())
                 .setSourceId(sourceId)
                 .setReceiveTime(receiveTime);
         //  推送到分发器

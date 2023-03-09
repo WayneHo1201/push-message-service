@@ -1,9 +1,9 @@
 package cn.com.gffunds.pushmessage.websocket.handler;
 
-import cn.com.gffunds.pushmessage.websocket.common.enumeration.WebsocketCommandEnum;
 import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
+import cn.com.gffunds.pushmessage.websocket.common.enumeration.WebsocketCommandEnum;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
@@ -15,7 +15,9 @@ import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.*;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
@@ -80,20 +82,18 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             sendMessage(webSocketSession, response);
             return;
         }
+        String msgId = messageRequest.getMsgId();
+        // 构建命令返回对象
+        response = new MessageResponse().setMsgId(msgId);
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
-            sendMessage(webSocketSession, new MessageResponse().setMsgId(messageRequest.getMsgId()));
+            sendMessage(webSocketSession, response);
             return;
         }
-        String msgId = messageRequest.getMsgId();
         List<BizTopic> bizTopics = messageRequest.getBizTopics();
         // 构建bizMessageManagerMap
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
-        // 构建命令返回对象
-        response = new MessageResponse()
-                .setMsgId(msgId)
-                .setMsgType(WebSocketConstants.MSG_TYPE_COMMAND);
         String command = messageRequest.getCommand();
         //  通用消息返回
         if (WebsocketCommandEnum.SUBSCRIBE.code().equals(command)) {

@@ -43,8 +43,8 @@ public enum ErrCodeEnum {
     PARTIAL_INCORRECT("B0002", "PARTIAL_INCORRECT"),
     ;
 
-    private String code;
-    private String msg;
+    private final String code;
+    private final String msg;
 
     ErrCodeEnum(String code, String msg) {
         this.code = code;
