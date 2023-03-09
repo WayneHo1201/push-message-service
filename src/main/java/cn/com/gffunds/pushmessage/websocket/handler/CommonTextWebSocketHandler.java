@@ -14,6 +14,7 @@ import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -23,7 +24,11 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,8 +40,18 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      * 线程安全Map，用来存放每个客户端对应的MessageConsumer对象
      */
     private static final Map<WebSocketSession, MessageConsumer> SESSION = new ConcurrentHashMap<>();
-
+    /**
+     * 心跳包检测任务map
+     */
+    private static final Map<String, ScheduledFuture<?>> SCHEDULED = new ConcurrentHashMap<>();
     private static final String CONSUMER = "messageConsumer";
+
+    // 心跳检测时间
+    @Value("${websocket.heartbeat.interval:600000}")
+    private long heartbeatInterval;
+
+    private final ScheduledThreadPoolExecutor heartbeatExecutor = new ScheduledThreadPoolExecutor(1);
+
 
     /**
      * 新增socket
@@ -51,6 +66,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         SESSION.put(webSocketSession, messageConsumer);
         log.info("===========成功建立连接===========");
         sendMessage(webSocketSession, new MessageResponse());
+        startHeartbeatCheck(messageConsumer);
     }
 
 
@@ -86,6 +102,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 构建命令返回对象
         response = new MessageResponse().setMsgId(msgId);
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
+            messageConsumer.setLastActiveTime(System.currentTimeMillis());
             log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
             sendMessage(webSocketSession, response);
             return;
@@ -155,5 +172,32 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-
+    /**
+     * 启动心跳检测定时任务
+     */
+    private void startHeartbeatCheck(MessageConsumer messageConsumer) {
+        final String id = messageConsumer.getWebSocketSession().getId();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                // 获取session的最后活跃时间
+                Long lastActiveTime = messageConsumer.getLastActiveTime();
+                if (lastActiveTime == null || System.currentTimeMillis() - lastActiveTime > heartbeatInterval) {
+                    // 如果最后活跃时间为null或超过了心跳检测时间，则断开连接
+                    try {
+                        log.warn("{}秒内没有接收到心跳包，主动断开连接！id={}", heartbeatInterval / 1000, id);
+                        close(messageConsumer.getWebSocketSession());
+                    } catch (IOException e) {
+                        log.error("关闭连接失败！", e);
+                    } finally {
+                        SCHEDULED.get(id).cancel(true);
+                        SCHEDULED.remove(id);
+                    }
+                }
+            }
+        };
+        // 设置定时任务的执行时间为心跳检测时间
+        ScheduledFuture<?> scheduledFuture = heartbeatExecutor.scheduleAtFixedRate(task, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
+        SCHEDULED.putIfAbsent(id, scheduledFuture);
+    }
 }

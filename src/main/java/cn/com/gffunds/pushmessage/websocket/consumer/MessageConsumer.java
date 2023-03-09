@@ -65,6 +65,12 @@ public class MessageConsumer {
     private AntPathMatcher matcher = new AntPathMatcher();
 
     /**
+     * 心跳最后活跃时间
+     */
+    private Long lastActiveTime;
+
+
+    /**
      * 创建时间
      */
     private String createTime = DateUtil.now();
