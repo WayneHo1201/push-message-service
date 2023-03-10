@@ -3,6 +3,7 @@ package cn.com.gffunds.pushmessage.websocket.handler;
 import cn.com.gffunds.commons.exception.JsonDeserializerException;
 import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.pushmessage.common.enumeration.ErrCodeEnum;
+import cn.com.gffunds.pushmessage.config.LogConfig;
 import cn.com.gffunds.pushmessage.websocket.common.enumeration.WebsocketCommandEnum;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
@@ -14,6 +15,7 @@ import cn.com.gffunds.pushmessage.websocket.manager.BizMessageManager;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -34,6 +36,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class CommonTextWebSocketHandler extends TextWebSocketHandler {
+
+    @Autowired
+    private LogConfig logConfig;
 
 
     /**
@@ -64,7 +69,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         messageConsumer.setUserInfo(userInfo)
                 .setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
-        log.info("===========成功建立连接===========");
+        log.info("成功建立连接！用户={} ，session={}",userInfo.getUsername(), webSocketSession.getId());
         sendMessage(webSocketSession, new MessageResponse());
         startHeartbeatCheck(messageConsumer);
     }
@@ -85,7 +90,9 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      */
     @SneakyThrows
     private void handleCommand(WebSocketSession webSocketSession, String payload, MessageConsumer messageConsumer) {
-        log.info("websocket接收到的信息： " + payload);
+        if (logConfig.isLogEnable()) {
+            log.info("websocket接收到的信息=" + payload);
+        }
         // 构造messageRequest
         MessageRequest messageRequest;
         MessageResponse response;
@@ -103,7 +110,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         response = new MessageResponse().setMsgId(msgId);
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             messageConsumer.setLastActiveTime(System.currentTimeMillis());
-            log.info("心跳包检测，用户：{}", messageConsumer.getUserInfo().getUsername());
+            log.info("心跳包检测，用户={}", messageConsumer.getUserInfo().getUsername());
             sendMessage(webSocketSession, response);
             return;
         }
@@ -185,7 +192,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                 if (lastActiveTime == null || System.currentTimeMillis() - lastActiveTime > heartbeatInterval) {
                     // 如果最后活跃时间为null或超过了心跳检测时间，则断开连接
                     try {
-                        log.warn("{}秒内没有接收到心跳包，主动断开连接！id={}", heartbeatInterval / 1000, id);
+                        log.warn("{}秒内没有接收到心跳包，主动断开连接！session={}", heartbeatInterval / 1000, id);
                         close(messageConsumer.getWebSocketSession());
                     } catch (IOException e) {
                         log.error("关闭连接失败！", e);

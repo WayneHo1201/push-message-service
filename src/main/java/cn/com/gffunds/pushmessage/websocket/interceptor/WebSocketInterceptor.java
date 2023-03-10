@@ -37,12 +37,12 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
-        log.info("===========握手之前=============");
         HttpServletRequest servletRequest = ((ServletServerHttpRequest) request).getServletRequest();
         // 根据token获取用户信息
         String token = servletRequest.getParameter(WebSocketConstants.TOKEN);
         // 校验sessionId
         if (enable) {
+            log.info("握手之前，开始校验token");
             UserInfo userInfo = userService.getUserInfo(token);
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
         } else {
@@ -58,7 +58,6 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
                                Exception ex) {
-        log.info("===========握手之后=============");
         super.afterHandshake(request, response, wsHandler, ex);
     }
 }
