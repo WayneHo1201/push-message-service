@@ -110,7 +110,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         response = new MessageResponse().setMsgId(msgId);
         if (WebsocketCommandEnum.PING.code().equals(messageRequest.getCommand())) {
             messageConsumer.setLastActiveTime(System.currentTimeMillis());
-            log.info("心跳包检测，用户={}", messageConsumer.getUserInfo().getUsername());
+            log.info("心跳包检测！ 用户={}，session={}", messageConsumer.getUserInfo().getUsername(), webSocketSession.getId());
             sendMessage(webSocketSession, response);
             return;
         }
@@ -169,9 +169,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      */
     private void close(WebSocketSession session) throws IOException {
         MessageConsumer messageConsumer = SESSION.get(session);
+        stopHeartbeatCheck(session.getId());
         if (messageConsumer != null) {
-            messageConsumer.closeConnection();
             SESSION.remove(session);
+            messageConsumer.closeConnection();
         } else {
             if (session.isOpen()) {
                 session.close();
@@ -197,8 +198,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
                     } catch (IOException e) {
                         log.error("关闭连接失败！", e);
                     } finally {
-                        SCHEDULED.get(id).cancel(true);
-                        SCHEDULED.remove(id);
+                        stopHeartbeatCheck(id);
                     }
                 }
             }
@@ -206,5 +206,17 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 设置定时任务的执行时间为心跳检测时间
         ScheduledFuture<?> scheduledFuture = heartbeatExecutor.scheduleAtFixedRate(task, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
         SCHEDULED.putIfAbsent(id, scheduledFuture);
+        log.info("开始心跳检测任务！session={}", id);
+    }
+
+    /**
+     * 停止心跳检测任务任务
+     */
+    private void stopHeartbeatCheck(String id) {
+        if (SCHEDULED.containsKey(id)) {
+            SCHEDULED.get(id).cancel(false);
+            SCHEDULED.remove(id);
+            log.info("停止心跳检测任务！session={}", id);
+        }
     }
 }
