@@ -11,7 +11,7 @@ public enum WebsocketCommandEnum {
     /**
      * 退订
      */
-    UNSUBSCRIBE("unSubscribe", "退订"),
+    UNSUBSCRIBE("unsubscribe", "退订"),
     /**
      * 心跳包
      */

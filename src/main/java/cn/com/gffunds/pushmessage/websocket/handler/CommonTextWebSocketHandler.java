@@ -24,9 +24,7 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -118,7 +116,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 构建bizMessageManagerMap
         Map<String, BizMessageManager> bizMessageManagerMap = bizTopics.stream()
                 .collect(Collectors.toConcurrentMap(BizTopic::getBizId, bizTopic -> new BizMessageManager(bizTopic.getBizId(), bizTopic.getTopics())));
-        String command = messageRequest.getCommand();
+        String command = Optional.ofNullable(messageRequest.getCommand()).orElse("").toLowerCase(Locale.ROOT);
         //  通用消息返回
         if (WebsocketCommandEnum.SUBSCRIBE.code().equals(command)) {
             // 发送订阅通知
