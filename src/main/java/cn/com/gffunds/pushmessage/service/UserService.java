@@ -39,9 +39,8 @@ public class UserService {
     /**
      * 请求sso鉴权获取用户信息
      */
-    @SneakyThrows
     @SuppressWarnings("unchecked")
-    public String gettoken(String sessionId) {
+    public String gettoken(String sessionId) throws PushMessageException{
         // 对接sso校验并获取用户信息
         Map<String, String> map = new HashMap<>();
         map.put(WebSocketConstants.SESSION_ID, sessionId);
