@@ -62,14 +62,13 @@ public class UserService {
      * token换取用户信息
      */
     @SuppressWarnings("unchecked")
-    public UserInfo getUserInfo(String token) throws PushMessageException {
-        UserInfo userInfo;
+    public UserInfo getUserInfo(String token) {
+        UserInfo userInfo = null;
         try {
             userInfo = (UserInfo) redisTemplate.opsForValue().get(token);
         } catch (Exception e) {
             String msg = "token获取用户信息失败，请检查redis配置和token！";
             log.error(msg);
-            throw new PushMessageException(msg, ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         // 消费后删除
         if (userInfo != null) {
@@ -77,7 +76,6 @@ public class UserService {
         } else {
             String msg = "token获取用户信息为空，请检查token！";
             log.error(msg);
-            throw new PushMessageException(msg, ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         return userInfo;
     }

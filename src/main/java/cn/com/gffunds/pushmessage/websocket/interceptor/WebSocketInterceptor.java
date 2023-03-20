@@ -44,7 +44,9 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         if (enable) {
             log.info("握手之前，开始校验token");
             UserInfo userInfo = userService.getUserInfo(token);
-            attributes.put(WebSocketConstants.ATTR_USER, userInfo);
+            if (userInfo != null) {
+                attributes.put(WebSocketConstants.ATTR_USER, userInfo);
+            }
         } else {
             // todo for test
             UserInfo userInfo = new UserInfo().setUsername("guxh");

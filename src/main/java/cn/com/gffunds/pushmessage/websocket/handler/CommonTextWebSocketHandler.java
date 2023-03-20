@@ -60,14 +60,18 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      * 新增socket
      */
     @Override
-    public void afterConnectionEstablished(WebSocketSession webSocketSession) {
+    public void afterConnectionEstablished(WebSocketSession webSocketSession) throws Exception {
         //获取用户信息
         UserInfo userInfo = (UserInfo) webSocketSession.getAttributes().get(WebSocketConstants.ATTR_USER);
+        if (userInfo == null) {
+            this.close(webSocketSession);
+            return;
+        }
         MessageConsumer messageConsumer = SpringUtil.getBean(CONSUMER, MessageConsumer.class);
         messageConsumer.setUserInfo(userInfo)
                 .setWebSocketSession(webSocketSession);
         SESSION.put(webSocketSession, messageConsumer);
-        log.info("成功建立连接！用户={} ，session={}",userInfo.getUsername(), webSocketSession.getId());
+        log.info("成功建立连接！用户={} ，session={}", userInfo.getUsername(), webSocketSession.getId());
         sendMessage(webSocketSession, new MessageResponse());
         startHeartbeatCheck(messageConsumer);
     }
