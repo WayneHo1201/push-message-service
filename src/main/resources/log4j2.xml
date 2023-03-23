@@ -33,7 +33,6 @@
         <RollingFile name="RollingFileInfo" fileName="${FILE_PATH}/${FILE_NAME}.log"
                      filePattern="${FILE_PATH}/${FILE_NAME}/${FILE_NAME}-%d{yyyy-MM-dd}_%i.log" append="true">
             <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
-<!--            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>-->
             <PatternLayout pattern="${FILE_LOG_PATTERN}" charset="UTF-8"/>
             <Policies>
                 <!-- 基于时间的触发策略。该策略主要是完成周期性的log文件封存工作。有两个参数：
@@ -64,7 +63,6 @@
         <RollingFile name="PerfFileInfo" fileName="${FILE_PATH}/${PERF_FILE_NAME}.log"
                      filePattern="${FILE_PATH}/${FILE_NAME}/${FILE_NAME}-%d{yyyy-MM-dd}_%i.log" append="true">
             <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
-            <!--            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>-->
             <PatternLayout pattern="${FILE_LOG_PATTERN}" charset="UTF-8"/>
             <Policies>
                 <!-- 基于时间的触发策略。该策略主要是完成周期性的log文件封存工作。有两个参数：
@@ -90,9 +88,6 @@
                 </Delete>
             </DefaultRolloverStrategy>
         </RollingFile>
-<!--        <Async name="Async">-->
-<!--            <AppenderRef ref="Console"/>-->
-<!--        </Async>-->
     </appenders>
 
     <!--Logger 节点用来单独指定日志的形式，比如要为指定包下的 class 指定不同的日志级别等。-->

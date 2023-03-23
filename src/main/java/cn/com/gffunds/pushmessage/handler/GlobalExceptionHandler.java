@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(PushMessageException.class)
-    public ReturnResult exceptionHandler(PushMessageException e) {
+    public Object exceptionHandler(PushMessageException e) {
         //打印异常堆栈到日志
         log.error(e.getMessage(), e);
         return new ReturnResult<>(e.getErrorCode(), e.getErrorReason());
@@ -48,7 +48,7 @@ public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(Exception.class)
-    public ReturnResult handleRestException(Exception e) {
+    public Object handleRestException(Exception e) {
         log.error("业务执行异常", e);
         return new ReturnResult<>(ErrCodeEnum.REST_EXCEPTION);
     }
@@ -71,14 +71,14 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(ConstraintViolationException.class)
-    public ReturnResult handleConstraintViolationException(ConstraintViolationException e, HttpServletRequest request) {
+    public Object handleConstraintViolationException(ConstraintViolationException e, HttpServletRequest request) {
 
         logRequest(e, request);
         String errorMessage = Optional.ofNullable(e.getConstraintViolations()).orElseGet(Collections::emptySet).stream()
                 .map(ConstraintViolation::getMessage)
                 .map(msg -> "参数错误：" + msg)
                 .collect(Collectors.joining(System.lineSeparator()));
-        return new ReturnResult(
+        return new ReturnResult<>(
                 String.valueOf(HttpStatus.BAD_REQUEST.value()),
                 "错误信息：" + e.getMessage() + System.lineSeparator() + "校验信息：" + errorMessage
         );
@@ -89,14 +89,14 @@ public class GlobalExceptionHandler {
      */
     @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ReturnResult handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
+    public Object handleMethodArgumentNotValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
 
         logRequest(e, request);
         String message = Optional.ofNullable(e.getBindingResult()).map(Errors::getAllErrors).orElseGet(Collections::emptyList)
                 .stream()
                 .map(oe -> String.format("参数[%s]错误：%s；请求值：%s", oe.getObjectName(), oe.getDefaultMessage(), Arrays.toString(oe.getArguments())))
                 .collect(Collectors.joining(System.lineSeparator()));
-        return new ReturnResult(String.valueOf(HttpStatus.BAD_REQUEST.value()), message);
+        return new ReturnResult<>(String.valueOf(HttpStatus.BAD_REQUEST.value()), message);
     }
 
     /**
@@ -106,13 +106,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.OK)
-    public ReturnResult handleBindException(BindException e, HttpServletRequest request) {
+    public Object handleBindException(BindException e, HttpServletRequest request) {
         logRequest(e, request);
         String message = Optional.ofNullable(e.getBindingResult()).map(Errors::getAllErrors).orElseGet(Collections::emptyList)
                 .stream()
                 .map(oe -> String.format("参数[%s]错误：%s；请求值：%s", oe.getObjectName(), oe.getDefaultMessage(), Arrays.toString(oe.getArguments())))
                 .collect(Collectors.joining(System.lineSeparator()));
-        return new ReturnResult(String.valueOf(HttpStatus.BAD_REQUEST.value()), message);
+        return new ReturnResult<>(String.valueOf(HttpStatus.BAD_REQUEST.value()), message);
     }
 
     private String logRequest(Exception e, HttpServletRequest request) {

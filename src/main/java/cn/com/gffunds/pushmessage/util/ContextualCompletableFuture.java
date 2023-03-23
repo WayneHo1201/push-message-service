@@ -16,6 +16,8 @@ import java.util.function.Supplier;
  */
 @Slf4j
 public class ContextualCompletableFuture {
+    private ContextualCompletableFuture(){}
+
     public static <T> CompletableFuture<T> supply(Supplier<T> supplier, ExecutorService executorService) {
         String traceId = MDC.get(MDCConstants.TRACE_ID);
         return CompletableFuture.supplyAsync(() -> {

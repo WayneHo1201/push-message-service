@@ -1,7 +1,6 @@
 package cn.com.gffunds.pushmessage.controller;
 
 import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import cn.com.gffunds.pushmessage.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,7 @@ public class AuthenticateController {
     private UserService userService;
 
     @GetMapping("/gettoken")
-    public ReturnResult<String> authorize(@RequestParam String sessionId) throws PushMessageException {
+    public ReturnResult<String> authorize(@RequestParam String sessionId) {
         String token = userService.gettoken(sessionId);
         return new ReturnResult<>(token);
     }

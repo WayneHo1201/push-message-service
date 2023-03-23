@@ -16,7 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PushMessageException extends Exception{
+public class PushMessageException extends RuntimeException {
     private String errorReason;
     private String errorCode;
 

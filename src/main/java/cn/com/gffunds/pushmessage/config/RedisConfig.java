@@ -1,13 +1,11 @@
 package cn.com.gffunds.pushmessage.config;
 
-import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -34,30 +32,24 @@ import java.util.List;
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisConfig {
-    @Autowired
-    private IrmRedisProperties irmRedisProperties;
-
-    @Autowired
-    private IpmRedisProperties ipmRedisProperties;
-
     @Bean("irmRedisTemplate")
-    public RedisTemplate<String, Object> irmRedisTemplate() {
-        return defaultRedisTemplate(irmRedisConnectionFactory());
+    public RedisTemplate<String, Object> irmRedisTemplate(IrmRedisProperties irmRedisProperties) {
+        return defaultRedisTemplate(irmRedisConnectionFactory(irmRedisProperties));
     }
 
     @Bean("irmRedisConnectionFactory")
     @Primary
-    public LettuceConnectionFactory irmRedisConnectionFactory() {
+    public LettuceConnectionFactory irmRedisConnectionFactory(IrmRedisProperties irmRedisProperties) {
         return defaultRedisConnectionFactory(irmRedisProperties);
     }
 
     @Bean("ipmRedisTemplate")
-    public RedisTemplate<String, Object> ipmRedisTemplate() {
-        return defaultRedisTemplate(ipmRedisConnectionFactory());
+    public RedisTemplate<String, Object> ipmRedisTemplate(IpmRedisProperties ipmRedisProperties) {
+        return defaultRedisTemplate(ipmRedisConnectionFactory(ipmRedisProperties));
     }
 
     @Bean("ipmRedisConnectionFactory")
-    public LettuceConnectionFactory ipmRedisConnectionFactory() {
+    public LettuceConnectionFactory ipmRedisConnectionFactory(IpmRedisProperties ipmRedisProperties) {
         return defaultRedisConnectionFactory(ipmRedisProperties);
     }
 
@@ -131,7 +123,7 @@ public class RedisConfig {
 
     public RedisTemplate<String, Object> defaultRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         // 配置 json 序列化器 - Jackson2JsonRedisSerializer
-        Jackson2JsonRedisSerializer jacksonSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
+        Jackson2JsonRedisSerializer<Object> jacksonSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(objectMapper.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.NON_FINAL);

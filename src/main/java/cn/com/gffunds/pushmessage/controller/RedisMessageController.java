@@ -25,7 +25,7 @@ public class RedisMessageController {
      * 测试redis推送消息
      */
     @Resource
-    private RedisTemplate irmRedisTemplate;
+    private RedisTemplate<String, Object> irmRedisTemplate;
 
     @PostMapping("/send/irm")
     public String sendIrm(@RequestBody JsonNode jsonNode) {
@@ -35,7 +35,7 @@ public class RedisMessageController {
     }
 
     @Resource
-    private RedisTemplate ipmRedisTemplate;
+    private RedisTemplate<String, Object> ipmRedisTemplate;
 
     /**
      * 测试redis推送消息

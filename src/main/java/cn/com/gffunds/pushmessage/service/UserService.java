@@ -9,7 +9,6 @@ import cn.com.gffunds.pushmessage.exception.PushMessageException;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.hutool.core.util.IdUtil;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +31,7 @@ public class UserService {
     @Resource
     private GFHttpClient ssoGfHttpClient;
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
     @Value("${websocket.authentication.expire:30}")
     private long expireTime;
 
@@ -40,7 +39,7 @@ public class UserService {
      * 请求sso鉴权获取用户信息
      */
     @SuppressWarnings("unchecked")
-    public String gettoken(String sessionId) throws PushMessageException{
+    public String gettoken(String sessionId) {
         // 对接sso校验并获取用户信息
         Map<String, String> map = new HashMap<>();
         map.put(WebSocketConstants.SESSION_ID, sessionId);

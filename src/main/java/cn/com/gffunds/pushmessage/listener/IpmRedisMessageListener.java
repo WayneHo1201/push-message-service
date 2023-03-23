@@ -12,7 +12,7 @@ import javax.annotation.Resource;
 public class IpmRedisMessageListener extends AbstractRedisMessageListener {
 
     @Resource
-    private RedisTemplate ipmRedisTemplate;
+    private RedisTemplate<String, Object> ipmRedisTemplate;
 
     @Override
     public void onMessage(org.springframework.data.redis.connection.Message redisMessage, byte[] pattern) {

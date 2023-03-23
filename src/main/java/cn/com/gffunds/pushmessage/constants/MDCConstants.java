@@ -9,6 +9,8 @@ package cn.com.gffunds.pushmessage.constants;
  * @version: 1.0.0$
  */
 public class MDCConstants {
+
+    private MDCConstants(){}
     /**
      * 日志跟踪traceId
      */

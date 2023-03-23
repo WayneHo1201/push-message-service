@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @description websocket常量
  */
 public class WebSocketConstants {
+    private WebSocketConstants(){}
     /** 用户属性key */
     public static final String ATTR_USER = "user";
     /** 分割符 */

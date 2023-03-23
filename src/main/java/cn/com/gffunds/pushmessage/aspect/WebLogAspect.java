@@ -27,7 +27,7 @@ import java.util.*;
 @Slf4j
 public class WebLogAspect {
 
-    private static final int logMaxLen = 4000;
+    private static final int LOG_MAX_LEN = 4000;
 
     /**
      * 以 controller 包下定义的所有请求为切入点
@@ -35,6 +35,7 @@ public class WebLogAspect {
     @Pointcut("execution(public * cn.com.gffunds.pushmessage.controller..*.*(..)) " +
             "&& !execution(* cn.com.gffunds.pushmessage.handler.GlobalExceptionHandler.*(..))")
     public void webLog() {
+        // 日志切点
     }
 
     /**
@@ -48,6 +49,9 @@ public class WebLogAspect {
         if (log.isInfoEnabled()) {
             // 开始打印请求日志
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                return;
+            }
             HttpServletRequest request = attributes.getRequest();
             if (request.getRequestURL().indexOf("/database/encrypt") != -1 || request.getRequestURL().indexOf("/database/decrypt") != -1) {
                 return;
@@ -108,7 +112,7 @@ public class WebLogAspect {
             logMap.put("Time-Consuming", String.format("%sms", System.currentTimeMillis() - startTime));
             logMap.put("Response", response);
             String json = JacksonUtil.toJson(logMap);
-            log.info(json.length() > logMaxLen ? json.substring(0, logMaxLen).concat("【已截断】") : json);
+            log.info(json.length() > LOG_MAX_LEN ? json.substring(0, LOG_MAX_LEN).concat("【已截断】") : json);
         }
         return result;
     }

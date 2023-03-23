@@ -28,10 +28,10 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-
+        // 每个监听器都需要构造自己的方法
     }
 
-    public void messageListen(RedisTemplate redisTemplate, Message redisMessage, String sourceId) {
+    public void messageListen(RedisTemplate<String, Object> redisTemplate, Message redisMessage, String sourceId) {
         // 获取消息
         byte[] messageBody = redisMessage.getBody();
         // 使用值序列化器转换

@@ -24,19 +24,25 @@ public class PrometheusMeterAspect {
      * redis消息监听
      */
     @Pointcut("execution(public * cn.com.gffunds.pushmessage.listener.*.onMessage(..))")
-    public void redisOnMessage() {}
+    public void redisOnMessage() {
+        // 监听切面
+        }
 
     /**
      * 客户端订阅
      */
     @Pointcut("execution(public * cn.com.gffunds.pushmessage..MessageConsumer.subscribe(..))")
-    public void subscribe() {}
+    public void subscribe() {
+        // 订阅切面
+    }
 
     /**
      * 客户端退订
      */
     @Pointcut("execution(public * cn.com.gffunds.pushmessage..MessageConsumer.unsubscribe(..))")
-    public void unsubscribe() {}
+    public void unsubscribe() {
+        // 退订切面
+    }
 
     /**
      * redis监听信息统计
@@ -44,8 +50,7 @@ public class PrometheusMeterAspect {
     @Around("redisOnMessage()")
     public Object redisOnMessageAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         try {
-            Object result = proceedingJoinPoint.proceed();
-            return result;
+            return proceedingJoinPoint.proceed();
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
             // 统计redis推送
@@ -59,8 +64,7 @@ public class PrometheusMeterAspect {
     @Around("subscribe()")
     public Object subscribeAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         try {
-            Object result = proceedingJoinPoint.proceed();
-            return result;
+            return proceedingJoinPoint.proceed();
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
             // 统计客户端订阅
@@ -74,8 +78,7 @@ public class PrometheusMeterAspect {
     @Around("unsubscribe()")
     public Object unsubscribeAround(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         try {
-            Object result = proceedingJoinPoint.proceed();
-            return result;
+            return proceedingJoinPoint.proceed();
         } finally {
             String methodName = proceedingJoinPoint.getSignature().getName();
             // 统计客户端退订
