@@ -12,17 +12,17 @@ import lombok.*;
  * @modified By：
  * @version: 1.0.0$
  */
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
-@Setter
 public class PushMessageException extends RuntimeException {
-    private String errorReason;
-    private String errorCode;
+    private final String errorCode;
 
     public PushMessageException(String errorReason) {
-        this.errorReason = errorReason;
+        super(errorReason);
         this.errorCode = ErrCodeEnum.INTERNAL_SERVER_ERROR.code();
     }
 
+    public PushMessageException(String errorReason, String code) {
+        super(errorReason);
+        this.errorCode = code;
+    }
 }
