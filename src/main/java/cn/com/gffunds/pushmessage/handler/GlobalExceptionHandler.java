@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
     public Object exceptionHandler(PushMessageException e) {
         //打印异常堆栈到日志
         log.error(e.getMessage(), e);
-        return new ReturnResult<>(e.getErrorCode(), e.getErrorReason());
+        return new ReturnResult<>(e.getErrorCode(),e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.OK)
