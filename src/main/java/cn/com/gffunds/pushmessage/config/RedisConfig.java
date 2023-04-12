@@ -43,16 +43,6 @@ public class RedisConfig {
         return defaultRedisConnectionFactory(irmRedisProperties);
     }
 
-    @Bean("ipmRedisTemplate")
-    public RedisTemplate<String, Object> ipmRedisTemplate(IpmRedisProperties ipmRedisProperties) {
-        return defaultRedisTemplate(ipmRedisConnectionFactory(ipmRedisProperties));
-    }
-
-    @Bean("ipmRedisConnectionFactory")
-    public LettuceConnectionFactory ipmRedisConnectionFactory(IpmRedisProperties ipmRedisProperties) {
-        return defaultRedisConnectionFactory(ipmRedisProperties);
-    }
-
     /**
      * 单例模式的redisConnectionFactory
      */
@@ -143,7 +133,6 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
-
 
     @SneakyThrows
     private List<RedisNode> createSentinels(DefaultRedisProperties.Sentinel sentinel) {

@@ -1,17 +1,14 @@
 package cn.com.gffunds.pushmessage.service;
 
 import cn.com.gffunds.pushmessage.config.DefaultRedisProperties;
-import cn.com.gffunds.pushmessage.config.IpmRedisProperties;
 import cn.com.gffunds.pushmessage.config.IrmRedisProperties;
 import cn.com.gffunds.pushmessage.config.SubscribeConfig;
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
-import cn.com.gffunds.pushmessage.listener.IpmRedisMessageListener;
 import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
 import cn.hutool.extra.spring.SpringUtil;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
@@ -37,12 +34,8 @@ public class RefreshService {
     private SubscribeConfig subscribeConfig;
     @Resource
     private IrmRedisMessageListener irmRedisMessageListener;
-    @Resource
-    private IpmRedisMessageListener ipmRedisMessageListener;
     @Autowired
     private IrmRedisProperties irmRedisProperties;
-    @Autowired
-    private IpmRedisProperties ipmRedisProperties;
 
     /**
      * 刷新所有配置
@@ -50,11 +43,8 @@ public class RefreshService {
     @SuppressWarnings("unchecked")
     public void refresh(){
         RedisMessageListenerContainer irmContainer = SpringUtil.getBean("irmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
-        RedisMessageListenerContainer ipmContainer = SpringUtil.getBean("ipmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
         redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
-        redisConfigRefresh(ipmContainer, ipmRedisMessageListener, ipmRedisProperties);
         List<BizTopic> list = new ArrayList<>(irmRedisProperties.getSubscribes());
-        list.addAll(ipmRedisProperties.getSubscribes());
         Set<String> bizIdSet = list.stream().map(BizTopic::getBizId).collect(Collectors.toSet());
         dispatcherRefresh(bizIdSet);
     }
@@ -78,6 +68,4 @@ public class RefreshService {
         }
         dispatcherMap.entrySet().removeIf(entry -> !bizIdSet.contains(entry.getKey()));
     }
-
-
 }

@@ -22,9 +22,6 @@ import java.util.Map;
 @Data
 public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
 
-    @Value("${websocket.authentication.enable:true}")
-    private boolean enable;
-
     @Autowired
     private UserService userService;
 
@@ -41,17 +38,12 @@ public class WebSocketInterceptor extends HttpSessionHandshakeInterceptor {
         // 根据token获取用户信息
         String token = servletRequest.getParameter(WebSocketConstants.TOKEN);
         // 校验sessionId
-        if (enable) {
-            log.info("握手之前，开始校验token");
-            UserInfo userInfo = userService.getUserInfo(token);
-            if (userInfo != null) {
-                attributes.put(WebSocketConstants.ATTR_USER, userInfo);
-            }
-        } else {
-            // todo for test
-            UserInfo userInfo = new UserInfo().setUsername("guxh");
+        log.info("握手之前，开始校验token");
+        UserInfo userInfo = userService.getUserInfo(token);
+        if (userInfo != null) {
             attributes.put(WebSocketConstants.ATTR_USER, userInfo);
         }
+
         //从request里面获取对象，存放attributes
         return super.beforeHandshake(request, response, wsHandler, attributes);
     }

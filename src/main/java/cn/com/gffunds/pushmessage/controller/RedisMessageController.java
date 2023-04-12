@@ -33,17 +33,4 @@ public class RedisMessageController {
         irmRedisTemplate.convertAndSend(channel, JacksonUtil.toJson(jsonNode.get("data")));
         return "success";
     }
-
-    @Resource
-    private RedisTemplate<String, Object> ipmRedisTemplate;
-
-    /**
-     * 测试redis推送消息
-     */
-    @PostMapping("/send/ipm")
-    public String sendIpm(@RequestBody JsonNode jsonNode) {
-        String channel = jsonNode.get("channel").asText();
-        ipmRedisTemplate.convertAndSend(channel, JacksonUtil.toJson(jsonNode.get("data")));
-        return "success";
-    }
 }

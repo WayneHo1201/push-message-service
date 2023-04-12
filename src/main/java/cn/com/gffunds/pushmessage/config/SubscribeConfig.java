@@ -1,7 +1,6 @@
 package cn.com.gffunds.pushmessage.config;
 
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
-import cn.com.gffunds.pushmessage.listener.IpmRedisMessageListener;
 import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
@@ -32,12 +31,8 @@ public class SubscribeConfig {
 
     @Autowired
     private IrmRedisProperties irmRedisProperties;
-    @Autowired
-    private IpmRedisProperties ipmRedisProperties;
     @Resource
     private RedisConnectionFactory irmRedisConnectionFactory;
-    @Resource
-    private RedisConnectionFactory ipmRedisConnectionFactory;
 
     /**
      * 订阅redis
@@ -48,22 +43,12 @@ public class SubscribeConfig {
     }
 
     /**
-     * 订阅redis
-     */
-    @Bean("ipmRedisMessageListenerContainer")
-    public RedisMessageListenerContainer ipmRedisMessageListenerContainer(IpmRedisMessageListener listener) {
-        return generateRedisMessageListenerContainer(listener, ipmRedisConnectionFactory, ipmRedisProperties);
-    }
-
-
-    /**
      * 构造分发器（若有新数据源接入需要新增构建逻辑）
      */
     @Bean
     public MessageDispatcher messageDispatcher() {
         Map<String, MessageHandler> map = new ConcurrentHashMap<>();
         List<BizTopic> redis = new ArrayList<>();
-        redis.addAll(ipmRedisProperties.getSubscribes());
         redis.addAll(irmRedisProperties.getSubscribes());
         for (BizTopic redisSubscribes : redis) {
             String bizId = redisSubscribes.getBizId();

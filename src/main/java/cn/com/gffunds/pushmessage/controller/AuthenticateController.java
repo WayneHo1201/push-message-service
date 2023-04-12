@@ -17,6 +17,9 @@ public class AuthenticateController {
     @Autowired
     private UserService userService;
 
+    /**
+     * sessionId获取token
+     */
     @GetMapping("/gettoken")
     public ReturnResult<String> authorize(@RequestParam String sessionId) {
         String token = userService.gettoken(sessionId);
