@@ -1,12 +1,13 @@
 package cn.com.gffunds.pushmessage;
 
+import cn.com.gffunds.gfsecurity.autoconfigure.config.SSOAutoConfiguration;
 import cn.hutool.extra.spring.EnableSpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = SSOAutoConfiguration.class)
 @Slf4j
 @EnableDiscoveryClient
 @EnableSpringUtil
