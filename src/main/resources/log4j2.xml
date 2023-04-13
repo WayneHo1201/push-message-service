@@ -13,9 +13,7 @@
                   WARN=bright yellow, INFO=bright default, DEBUG=bright white} %style{%l %X{traceId}}{cyan} %highlight{%msg%n%throwable}{
                   ERROR=bright red, WARN=bright yellow, INFO=bright default, DEBUG=bright white}"/>
         <property name="FILE_LOG_PATTERN"
-                  value="%d{yyyy-MM-dd HH:mm:ss.SSS} %style{[%t]}{bright,magenta} %highlight{%-5level}{ERROR=bright red,
-                  WARN=bright yellow, INFO=bright default, DEBUG=bright white} %style{%l %traceId}{cyan} %highlight{%msg%n%throwable}{
-                  ERROR=bright red, WARN=bright yellow, INFO=bright default, DEBUG=bright white}"/>
+                  value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %l %X{traceId} %msg%n%throwable"/>
 
         <!-- 定义日志存储的路径 -->
         <property name="FILE_PATH" value="logs"/>
