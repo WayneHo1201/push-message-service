@@ -122,7 +122,8 @@ public class MessageConsumer {
             String bizId = entry.getKey();
             BizMessageManager value = entry.getValue();
             if (bizMessageManagers.containsKey(bizId)) {
-                bizMessageManagers.get(bizId).getTopics().addAll(value.getTopics());
+                // 如果存在该业务就把主题添加至主题列表
+                bizMessageManagers.get(bizId).addTopics(value.getTopics());
             } else {
                 // 注册到messageHandler
                 bizMessageManagers.put(bizId, value);
@@ -131,17 +132,18 @@ public class MessageConsumer {
                     bizIdSet.add(bizId);
                     continue;
                 }
+                // 注册到业务处理器
                 messageHandler.registerObserver(this);
             }
         }
         if (!CollectionUtils.isEmpty(bizIdSet)) {
             String msg = String.format("客户端订阅的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
-            log.warn(msg);
             if (bizMessageManagerMap.size() == bizIdSet.size()) {
                 response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
             } else {
                 response.setCode(ErrCodeEnum.PARTIAL_INCORRECT.code()).setData(msg);
             }
+            log.warn(msg);
         }
     }
 
@@ -154,9 +156,12 @@ public class MessageConsumer {
         for (Map.Entry<String, BizMessageManager> entry : bizMessageManagerMap.entrySet()) {
             String bizId = entry.getKey();
             BizMessageManager value = entry.getValue();
+            // 判断业务处理列表是否有该业务
             if (bizMessageManagers.containsKey(bizId)) {
-                Set<String> topics = bizMessageManagers.get(bizId).getTopics();
-                topics.removeAll(value.getTopics());
+                BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
+                // 移除该业务下的topics
+                bizMessageManager.removeTopics(value.getTopics());
+                Set<String> topics = bizMessageManager.getTopics();
                 // 该业务订阅列表为空
                 if (CollectionUtils.isEmpty(topics)) {
                     bizMessageManagers.remove(bizId);

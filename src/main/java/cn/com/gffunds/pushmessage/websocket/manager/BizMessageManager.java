@@ -17,4 +17,18 @@ import java.util.Set;
 public class BizMessageManager {
     private String bizId;
     private Set<String> topics;
+
+    /**
+     * 添加topics
+     */
+    public void addTopics(Set<String> topics) {
+        this.topics.addAll(topics);
+    }
+
+    /**
+     * 移除topics
+     */
+    public void removeTopics(Set<String> topics) {
+        this.topics.removeAll(topics);
+    }
 }

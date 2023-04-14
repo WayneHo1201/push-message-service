@@ -42,11 +42,11 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     /**
      * 线程安全Map，用来存放每个客户端对应的MessageConsumer对象
      */
-    private static final Map<WebSocketSession, MessageConsumer> SESSION = new ConcurrentHashMap<>();
+    private static final Map<WebSocketSession, MessageConsumer> SESSION_MAP = new ConcurrentHashMap<>();
     /**
      * 心跳包检测任务map
      */
-    private static final Map<String, ScheduledFuture<?>> SCHEDULED = new ConcurrentHashMap<>();
+    private static final Map<String, ScheduledFuture<?>> SCHEDULED_MAP = new ConcurrentHashMap<>();
     private static final String CONSUMER = "messageConsumer";
 
     // 心跳检测时间
@@ -70,7 +70,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         MessageConsumer messageConsumer = SpringUtil.getBean(CONSUMER, MessageConsumer.class);
         messageConsumer.setUserInfo(userInfo)
                 .setWebSocketSession(webSocketSession);
-        SESSION.put(webSocketSession, messageConsumer);
+        SESSION_MAP.put(webSocketSession, messageConsumer);
         log.info("成功建立连接！用户={} ，session={}", userInfo.getUsername(), webSocketSession.getId());
         sendMessage(webSocketSession, new MessageResponse());
         startHeartbeatCheck(messageConsumer);
@@ -83,7 +83,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession webSocketSession, TextMessage message) {
         String payload = message.getPayload();
-        MessageConsumer messageConsumer = SESSION.get(webSocketSession);
+        MessageConsumer messageConsumer = SESSION_MAP.get(webSocketSession);
         handleCommand(webSocketSession, payload, messageConsumer);
     }
 
@@ -102,9 +102,9 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             messageRequest = JacksonUtil.toObject(payload, MessageRequest.class);
         } catch (JsonDeserializerException e) {
             String msg = String.format("请求消息解析异常！payload=%s", payload);
-            log.error(msg);
             response = new MessageResponse().setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
             sendMessage(webSocketSession, response);
+            log.error(msg);
             return;
         }
         String msgId = messageRequest.getMsgId();
@@ -130,8 +130,8 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
             messageConsumer.unsubscribe(bizMessageManagerMap, response);
         } else {
             String msg = String.format("不支持该命令！command=%s", command);
-            log.error(msg);
             response.setCode(ErrCodeEnum.REST_EXCEPTION.code()).setData(msg);
+            log.error(msg);
         }
         sendMessage(webSocketSession, response);
     }
@@ -170,10 +170,10 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      * 清空session
      */
     private void close(WebSocketSession session) throws IOException {
-        MessageConsumer messageConsumer = SESSION.get(session);
+        MessageConsumer messageConsumer = SESSION_MAP.get(session);
         stopHeartbeatCheck(session.getId());
         if (messageConsumer != null) {
-            SESSION.remove(session);
+            SESSION_MAP.remove(session);
             messageConsumer.closeConnection();
         } else {
             if (session.isOpen()) {
@@ -207,7 +207,7 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         };
         // 设置定时任务的执行时间为心跳检测时间
         ScheduledFuture<?> scheduledFuture = heartbeatExecutor.scheduleAtFixedRate(task, heartbeatInterval, heartbeatInterval, TimeUnit.MILLISECONDS);
-        SCHEDULED.putIfAbsent(id, scheduledFuture);
+        SCHEDULED_MAP.putIfAbsent(id, scheduledFuture);
         log.info("开始心跳检测任务！session={}", id);
     }
 
@@ -215,9 +215,9 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
      * 停止心跳检测任务任务
      */
     private void stopHeartbeatCheck(String id) {
-        if (SCHEDULED.containsKey(id)) {
-            SCHEDULED.get(id).cancel(false);
-            SCHEDULED.remove(id);
+        if (SCHEDULED_MAP.containsKey(id)) {
+            SCHEDULED_MAP.get(id).cancel(false);
+            SCHEDULED_MAP.remove(id);
             log.info("停止心跳检测任务！session={}", id);
         }
     }

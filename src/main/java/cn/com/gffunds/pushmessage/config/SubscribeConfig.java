@@ -48,10 +48,12 @@ public class SubscribeConfig {
     @Bean
     public MessageDispatcher messageDispatcher() {
         Map<String, MessageHandler> map = new ConcurrentHashMap<>();
-        List<BizTopic> redis = new ArrayList<>();
-        redis.addAll(irmRedisProperties.getSubscribes());
-        for (BizTopic redisSubscribes : redis) {
+        List<BizTopic> bizTopics = new ArrayList<>();
+        // 把配置读取的订阅信息加载到bizTopics
+        bizTopics.addAll(irmRedisProperties.getSubscribes());
+        for (BizTopic redisSubscribes : bizTopics) {
             String bizId = redisSubscribes.getBizId();
+            // 创建业务消息处理器
             MessageHandler messageHandler = new MessageHandler();
             messageHandler.setBizId(bizId);
             map.put(bizId, messageHandler);
@@ -78,14 +80,15 @@ public class SubscribeConfig {
      */
     public Set<Topic> generateTopics(DefaultRedisProperties redisProperties) {
         //订阅频道 这个container可以添加多个messageListener
-        Set<Topic> subscribes = new HashSet<>();
+        Set<Topic> topicSet = new HashSet<>();
         for (BizTopic redisSubscribes : redisProperties.getSubscribes()) {
             String bizId = redisSubscribes.getBizId();
-            subscribes.addAll(redisSubscribes.getTopics()
+            // 读取配置加载到主题列表
+            topicSet.addAll(redisSubscribes.getTopics()
                     .stream()
                     .map(topic -> new PatternTopic(bizId + WebSocketConstants.SEPARATOR + topic))
                     .collect(Collectors.toSet()));
         }
-        return subscribes;
+        return topicSet;
     }
 }

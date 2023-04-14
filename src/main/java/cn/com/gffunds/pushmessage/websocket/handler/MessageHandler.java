@@ -58,12 +58,15 @@ public class MessageHandler {
     public void notifyObservers(Message message) {
         boolean flag = false;
         for (MessageConsumer messageConsumer : consumerSet) {
+            // 判断该客户端是否可用
             if (!messageConsumer.isValid()) {
                 flag = true;
                 continue;
             }
+            // 异步通知消费者
             SendMessageThreadPool.runAsyncNoException(() -> messageConsumer.consume(message));
         }
+        // 若存在不可用的客户端就调用移除方法
         if (flag) {
             removeInvalidObserver();
         }

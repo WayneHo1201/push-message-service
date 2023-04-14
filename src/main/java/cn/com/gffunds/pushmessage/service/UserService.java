@@ -43,9 +43,10 @@ public class UserService {
         // 对接sso校验并获取用户信息
         Map<String, String> map = new HashMap<>();
         map.put(WebSocketConstants.SESSION_ID, sessionId);
+        // 调用第三方接口获取sessionId
         HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
         ReturnResult returnResult = rs.getContent();
-        if (!"0".equals(returnResult.getErrorCode())) {
+        if (!returnResult.isSuccess()) {
             throw new PushMessageException(returnResult.getErrorMsg(), ErrCodeEnum.TOKEN_INCORRECT.code());
         }
         // 构建token
