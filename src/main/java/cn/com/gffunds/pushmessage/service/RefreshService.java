@@ -8,7 +8,7 @@ import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
-import cn.hutool.extra.spring.SpringUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
  * @description 刷新配置
  */
 @Service
+@Slf4j
 public class RefreshService {
     @Autowired
     private MessageDispatcher messageDispatcher;
@@ -36,17 +37,20 @@ public class RefreshService {
     private IrmRedisMessageListener irmRedisMessageListener;
     @Autowired
     private IrmRedisProperties irmRedisProperties;
+    @Resource
+    private RedisMessageListenerContainer irmRedisMessageListenerContainer;
 
     /**
      * 刷新所有配置
      */
     @SuppressWarnings("unchecked")
-    public void refresh(){
-        RedisMessageListenerContainer irmContainer = SpringUtil.getBean("irmRedisMessageListenerContainer", RedisMessageListenerContainer.class);
-        redisConfigRefresh(irmContainer, irmRedisMessageListener, irmRedisProperties);
+    public void refresh() {
+        log.info("=====================订阅配置刷新开始======================");
+        redisConfigRefresh(irmRedisMessageListenerContainer, irmRedisMessageListener, irmRedisProperties);
         List<BizTopic> list = new ArrayList<>(irmRedisProperties.getSubscribes());
         Set<String> bizIdSet = list.stream().map(BizTopic::getBizId).collect(Collectors.toSet());
         dispatcherRefresh(bizIdSet);
+        log.info("=====================订阅配置刷新结束======================");
     }
 
     /**
@@ -54,8 +58,10 @@ public class RefreshService {
      */
     private void redisConfigRefresh(RedisMessageListenerContainer container, AbstractRedisMessageListener listener, DefaultRedisProperties redisProperties) {
         Set<Topic> subscribes = subscribeConfig.generateTopics(redisProperties);
+        log.info("刷新后配置={}", subscribes);
         container.removeMessageListener(listener);
         container.addMessageListener(listener, subscribes);
+        log.info("监听器刷新完成！");
     }
 
     /**
@@ -67,5 +73,6 @@ public class RefreshService {
             dispatcherMap.putIfAbsent(bizId, new MessageHandler().setBizId(bizId));
         }
         dispatcherMap.entrySet().removeIf(entry -> !bizIdSet.contains(entry.getKey()));
+        log.info("分发器刷新完成！");
     }
 }

@@ -44,7 +44,8 @@ public class ReturnResult<T> {
     }
 
     public boolean isSuccess() {
-        return ErrCodeEnum.SUCCESS.code().equals(errorCode);
+        // 兼容sso成功错误码
+        return ErrCodeEnum.SUCCESS.code().equals(errorCode)|| "0".equals(errorCode);
     }
 
 }
