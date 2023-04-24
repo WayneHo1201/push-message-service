@@ -26,6 +26,9 @@ public class RefreshConfigListener implements ApplicationListener<ApplicationEve
     @Autowired
     private RefreshService refreshService;
 
+    /**
+     * 监听事件
+     */
     @Override
     @SneakyThrows
     public void onApplicationEvent(ApplicationEvent event) {
@@ -36,7 +39,7 @@ public class RefreshConfigListener implements ApplicationListener<ApplicationEve
     }
 
     /**
-     *
+     * 判断是否为刷新类
      */
     boolean isAssignable(String className, Object value) {
         try {
