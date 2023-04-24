@@ -5,6 +5,7 @@ import cn.com.gffunds.pushmessage.config.IrmRedisProperties;
 import cn.com.gffunds.pushmessage.config.SubscribeConfig;
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
 import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
+import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
@@ -15,10 +16,7 @@ import org.springframework.data.redis.listener.Topic;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -72,7 +70,21 @@ public class RefreshService {
         for (String bizId : bizIdSet) {
             dispatcherMap.putIfAbsent(bizId, new MessageHandler().setBizId(bizId));
         }
-        dispatcherMap.entrySet().removeIf(entry -> !bizIdSet.contains(entry.getKey()));
+        // 找到所有订阅该业务的客户端
+        Iterator<Map.Entry<String, MessageHandler>> iterator = dispatcherMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, MessageHandler> entry = iterator.next();
+            MessageHandler messageHandler = entry.getValue();
+            if (!bizIdSet.contains(messageHandler.getBizId())) {
+                log.info("消息推送中心取消订阅业务[{}]", messageHandler.getBizId());
+                Set<MessageConsumer> consumerSet = messageHandler.getConsumerSet();
+                for (MessageConsumer messageConsumer : consumerSet) {
+                    // 从客户端列表中移除该业务的订阅
+                    messageConsumer.removeBiz(messageHandler.getBizId());
+                }
+                iterator.remove();
+            }
+        }
         log.info("分发器刷新完成！");
     }
 }

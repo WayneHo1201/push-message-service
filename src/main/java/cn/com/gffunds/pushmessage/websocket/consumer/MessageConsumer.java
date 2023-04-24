@@ -227,4 +227,11 @@ public class MessageConsumer {
         }
         return false;
     }
+
+    /**
+     * 移除客户端的订阅数据
+     */
+    public void removeBiz(String bizId) {
+        this.bizMessageManagers.remove(bizId);
+    }
 }
