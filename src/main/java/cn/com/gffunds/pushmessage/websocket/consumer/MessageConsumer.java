@@ -125,13 +125,13 @@ public class MessageConsumer {
                 // 如果存在该业务就把主题添加至主题列表
                 bizMessageManagers.get(bizId).addTopics(value.getTopics());
             } else {
-                // 注册到messageHandler
-                bizMessageManagers.put(bizId, value);
                 MessageHandler messageHandler = dispatcherMap.get(bizId);
                 if (messageHandler == null) {
                     bizIdSet.add(bizId);
                     continue;
                 }
+                // 注册到messageHandler
+                bizMessageManagers.put(bizId, value);
                 // 注册到业务处理器
                 messageHandler.registerObserver(this);
             }
