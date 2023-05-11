@@ -135,6 +135,7 @@ public class MessageConsumer {
                 // 注册到业务处理器
                 messageHandler.registerObserver(this);
             }
+            log.info("用户[{}]订阅 业务：{} 主题：{}", userInfo.getUsername(), bizId, value.getTopics());
         }
         if (!CollectionUtils.isEmpty(bizIdSet)) {
             String msg = String.format("客户端订阅的以下业务不存在，请检查命令请求！bizId=%s", bizIdSet);
@@ -160,10 +161,10 @@ public class MessageConsumer {
             if (bizMessageManagers.containsKey(bizId)) {
                 BizMessageManager bizMessageManager = bizMessageManagers.get(bizId);
                 // 移除该业务下的topics
-                bizMessageManager.removeTopics(value.getTopics());
-                Set<String> topics = bizMessageManager.getTopics();
+                Set<String> removeTopics = bizMessageManager.removeTopics(value.getTopics());
+                log.info("用户[{}]取消订阅 业务：{} 主题：{}", userInfo.getUsername(), bizId, removeTopics);
                 // 该业务订阅列表为空
-                if (CollectionUtils.isEmpty(topics)) {
+                if (bizMessageManager.isEmpty()) {
                     bizMessageManagers.remove(bizId);
                     MessageHandler messageHandler = dispatcherMap.get(bizId);
                     if (messageHandler != null) {

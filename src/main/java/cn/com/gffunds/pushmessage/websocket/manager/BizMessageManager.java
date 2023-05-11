@@ -3,7 +3,10 @@ package cn.com.gffunds.pushmessage.websocket.manager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.CollectionUtils;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -17,6 +20,12 @@ import java.util.Set;
 public class BizMessageManager {
     private String bizId;
     private Set<String> topics;
+    private AntPathMatcher matcher = new AntPathMatcher();
+
+    public BizMessageManager(String bizId, Set<String> topics) {
+        this.bizId = bizId;
+        this.topics = topics;
+    }
 
     /**
      * 添加topics
@@ -28,7 +37,24 @@ public class BizMessageManager {
     /**
      * 移除topics
      */
-    public void removeTopics(Set<String> topics) {
-        this.topics.removeAll(topics);
+    public Set<String> removeTopics(Set<String> topicSet) {
+        Set<String> removeSet = new HashSet<>();
+        for (String topic : topicSet) {
+            // 通配符匹配删除主题
+            for (String subscribedTopic : topics) {
+                if (matcher.match(topic, subscribedTopic)) {
+                    removeSet.add(subscribedTopic);
+                }
+            }
+        }
+        this.topics.removeAll(removeSet);
+        return removeSet;
+    }
+
+    /**
+     * 判断订阅列表是否为空
+     */
+    public boolean isEmpty() {
+        return CollectionUtils.isEmpty(topics);
     }
 }
