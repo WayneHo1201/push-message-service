@@ -1,6 +1,7 @@
 package cn.com.gffunds.pushmessage.config;
 
 import cn.com.gffunds.pushmessage.listener.RedisMessageListener;
+import cn.hutool.extra.spring.SpringUtil;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProce
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,22 +41,12 @@ public class MyImportBean implements BeanFactoryAware {
             listableBeanFactory.registerSingleton(redisTemplate, redisConfig.defaultRedisTemplate(lettuceConnectionFactory));
             RedisMessageListener redisMessageListener = new RedisMessageListener(id);
             listableBeanFactory.registerSingleton(id + "RedisMessageListener", redisMessageListener);
-            listableBeanFactory.registerSingleton(id + "RedisMessageListenerContainer", subscribeConfig.generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty));
+            RedisMessageListenerContainer container = subscribeConfig.generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty);
             BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(LettuceConnectionFactory.class).getBeanDefinition();
             beanDefinition.setPrimary(true);
             listableBeanFactory.registerBeanDefinition(factory, beanDefinition);
+            //listableBeanFactory.registerSingleton(id + "RedisMessageListenerContainer", container);
+            SpringUtil.registerBean(id + "RedisMessageListenerContainer", container);
         }
     }
-//
-//    @Override
-//    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-////        for (SourceProperties.RedisProperties redisProperty : sourceProperties.getRedis()) {
-////            LettuceConnectionFactory lettuceConnectionFactory = redisConfig.defaultRedisConnectionFactory(redisProperty);
-////        }
-//    }
-//
-//    @Override
-//    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-//
-//    }
 }

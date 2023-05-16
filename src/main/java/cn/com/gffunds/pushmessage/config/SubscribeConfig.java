@@ -50,13 +50,6 @@ public class SubscribeConfig {
 //        return generateRedisMessageListenerContainer(listener, irmRedisConnectionFactory, irmRedisProperties);
 //    }
 
-//    public void init(SourceProperties.RedisProperties redisProperty, LettuceConnectionFactory lettuceConnectionFactory) {
-//        String id = redisProperty.getId();
-//        RedisMessageListener redisMessageListener = new RedisMessageListener(id);
-//        SpringUtil.registerBean(id + "RedisMessageListener", redisMessageListener);
-//        SpringUtil.registerBean(id + "RedisMessageListenerContainer", generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty));
-//    }
-
         /**
      * 构造分发器（若有新数据源接入需要新增构建逻辑）
      */
@@ -89,6 +82,7 @@ public class SubscribeConfig {
         container.setConnectionFactory(redisConnectionFactory);
         Set<Topic> subscribes = generateTopics(redisProperties);
         container.addMessageListener(listener, subscribes);
+        container.afterPropertiesSet();
         return container;
     }
 
