@@ -6,6 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 /**
  * @author hezhc
  * @date 2023/2/24 17:38
@@ -13,8 +15,17 @@ import org.springframework.context.annotation.Configuration;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ConfigurationProperties(prefix = "spring.redis.irm")
+@ConfigurationProperties(prefix = "spring")
 @Configuration
 @RefreshScope
-public class IrmRedisProperties extends DefaultRedisProperties{
+public class SourceProperties extends DefaultRedisProperties {
+    private List<RedisProperties> redis;
+
+
+    @Data
+    @RefreshScope
+    @EqualsAndHashCode(callSuper = true)
+    public static class RedisProperties extends DefaultRedisProperties {
+        private String id;
+    }
 }

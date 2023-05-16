@@ -1,16 +1,25 @@
 package cn.com.gffunds.pushmessage.config;
 
+import cn.hutool.extra.spring.SpringUtil;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
+import org.springframework.beans.factory.ListableBeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
@@ -20,8 +29,10 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -32,21 +43,48 @@ import java.util.List;
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisConfig {
-    @Bean("irmRedisTemplate")
-    public RedisTemplate<String, Object> irmRedisTemplate(IrmRedisProperties irmRedisProperties) {
-        return defaultRedisTemplate(irmRedisConnectionFactory(irmRedisProperties));
-    }
+//    @Bean("irmRedisTemplate")
+//    public RedisTemplate<String, Object> irmRedisTemplate(IrmRedisProperties irmRedisProperties) {
+//        return defaultRedisTemplate(irmRedisConnectionFactory(irmRedisProperties));
+//    }
+////
+    //@Bean("irmRedisConnectionFactory")
+//    @Primary
+//    public LettuceConnectionFactory irmRedisConnectionFactory(IrmRedisProperties irmRedisProperties) {
+//        return defaultRedisConnectionFactory(irmRedisProperties);
+//    }
+//
+//    @Autowired
+//    private SourceProperties sourceProperties;
+//
+//    @Autowired
+//    private SubscribeConfig subscribeConfig;
+//
+//    @PostConstruct
+//    public void init(){
+//        for (SourceProperties.RedisProperties redisProperty : sourceProperties.getRedis()) {
+//            String factory = redisProperty.getId() + "RedisConnectionFactory";
+//            String redisTemplate = redisProperty.getId() + "RedisTemplate";
+//            LettuceConnectionFactory lettuceConnectionFactory = defaultRedisConnectionFactory(redisProperty);
+//            SpringUtil.registerBean(factory, lettuceConnectionFactory);
+//            SpringUtil.registerBean(redisTemplate, defaultRedisTemplate(lettuceConnectionFactory));
+//            ListableBeanFactory beanFactory = SpringUtil.getBeanFactory();
+//            // 创建 BeanDefinition
+//            GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
+//            beanDefinition.setBeanClassName(LettuceConnectionFactory.class.getName());
+//            // 将 Bean 注册到 BeanFactory 中
+//            ((DefaultListableBeanFactory) beanFactory).registerBeanDefinition(factory, beanDefinition);
+//            // 设置为 Primary Bean
+//            ((DefaultListableBeanFactory) beanFactory).getBeanDefinition(factory).setPrimary(true);
+//            subscribeConfig.init(redisProperty, lettuceConnectionFactory);
 
-    @Bean("irmRedisConnectionFactory")
-    @Primary
-    public LettuceConnectionFactory irmRedisConnectionFactory(IrmRedisProperties irmRedisProperties) {
-        return defaultRedisConnectionFactory(irmRedisProperties);
-    }
+//        }
+//    }
 
     /**
      * 单例模式的redisConnectionFactory
      */
-    private LettuceConnectionFactory defaultRedisConnectionFactory(DefaultRedisProperties redisProperties) {
+    public LettuceConnectionFactory defaultRedisConnectionFactory(DefaultRedisProperties redisProperties) {
         if (redisProperties.getSentinel() != null) {
             RedisConfiguration configuration = defaultSentinelRedisConnectionFactory(redisProperties.getSentinel());
             return getLettuceConnectionFactory(redisProperties, configuration);
@@ -60,7 +98,7 @@ public class RedisConfig {
     /**
      * 单例模式的redisConnectionFactory
      */
-    private RedisStandaloneConfiguration getRedisStandaloneConfiguration(DefaultRedisProperties redisProperties) {
+    public RedisStandaloneConfiguration getRedisStandaloneConfiguration(DefaultRedisProperties redisProperties) {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration();
         configuration.setHostName(redisProperties.getHost());
         configuration.setPort(redisProperties.getPort());

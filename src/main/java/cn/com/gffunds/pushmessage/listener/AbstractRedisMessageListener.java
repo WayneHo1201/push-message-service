@@ -8,6 +8,7 @@ import cn.com.gffunds.pushmessage.websocket.listener.WebSocketMessageListener;
 import cn.hutool.core.date.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +23,7 @@ import java.util.Map;
  */
 @Slf4j
 public class AbstractRedisMessageListener implements MessageListener, WebSocketMessageListener {
+    @Lazy
     @Autowired
     private MessageDispatcher messageDispatcher;
 

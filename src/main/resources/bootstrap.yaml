@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: push-message-service
+    name: push-message-service-hezc
   cloud:
     nacos:
       host: 10.89.187.68:8848,10.89.187.69:8848,10.89.187.70:8848

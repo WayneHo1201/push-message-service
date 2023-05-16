@@ -1,22 +1,30 @@
 package cn.com.gffunds.pushmessage.config;
 
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
-import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
+import cn.com.gffunds.pushmessage.listener.RedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 
-import javax.annotation.Resource;
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -30,19 +38,26 @@ import java.util.stream.Collectors;
 public class SubscribeConfig {
 
     @Autowired
-    private IrmRedisProperties irmRedisProperties;
-    @Resource
-    private RedisConnectionFactory irmRedisConnectionFactory;
+    private SourceProperties sourceProperties;
+//    @Resource
+//    private RedisConnectionFactory irmRedisConnectionFactory;
 
-    /**
-     * 订阅redis
-     */
-    @Bean("irmRedisMessageListenerContainer")
-    public RedisMessageListenerContainer irmRedisMessageListenerContainer(IrmRedisMessageListener listener) {
-        return generateRedisMessageListenerContainer(listener, irmRedisConnectionFactory, irmRedisProperties);
-    }
+//    /**
+//     * 订阅redis
+//     */
+//    @Bean("irmRedisMessageListenerContainer")
+//    public RedisMessageListenerContainer irmRedisMessageListenerContainer(IrmRedisMessageListener listener) {
+//        return generateRedisMessageListenerContainer(listener, irmRedisConnectionFactory, irmRedisProperties);
+//    }
 
-    /**
+//    public void init(SourceProperties.RedisProperties redisProperty, LettuceConnectionFactory lettuceConnectionFactory) {
+//        String id = redisProperty.getId();
+//        RedisMessageListener redisMessageListener = new RedisMessageListener(id);
+//        SpringUtil.registerBean(id + "RedisMessageListener", redisMessageListener);
+//        SpringUtil.registerBean(id + "RedisMessageListenerContainer", generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty));
+//    }
+
+        /**
      * 构造分发器（若有新数据源接入需要新增构建逻辑）
      */
     @Bean
@@ -50,7 +65,9 @@ public class SubscribeConfig {
         Map<String, MessageHandler> map = new ConcurrentHashMap<>();
         List<BizTopic> bizTopics = new ArrayList<>();
         // 把配置读取的订阅信息加载到bizTopics
-        bizTopics.addAll(irmRedisProperties.getSubscribes());
+        for (SourceProperties.RedisProperties redisProperty : sourceProperties.getRedis()) {
+            bizTopics.addAll(redisProperty.getSubscribes());
+        }
         for (BizTopic redisSubscribes : bizTopics) {
             String bizId = redisSubscribes.getBizId();
             // 创建业务消息处理器
@@ -66,7 +83,7 @@ public class SubscribeConfig {
     /**
      * 构造container
      */
-    private RedisMessageListenerContainer generateRedisMessageListenerContainer(AbstractRedisMessageListener listener
+    public RedisMessageListenerContainer generateRedisMessageListenerContainer(AbstractRedisMessageListener listener
             , RedisConnectionFactory redisConnectionFactory, DefaultRedisProperties redisProperties) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory);

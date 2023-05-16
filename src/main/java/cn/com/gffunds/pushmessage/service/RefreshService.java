@@ -1,21 +1,21 @@
 package cn.com.gffunds.pushmessage.service;
 
 import cn.com.gffunds.pushmessage.config.DefaultRedisProperties;
-import cn.com.gffunds.pushmessage.config.IrmRedisProperties;
+import cn.com.gffunds.pushmessage.config.SourceProperties;
 import cn.com.gffunds.pushmessage.config.SubscribeConfig;
 import cn.com.gffunds.pushmessage.listener.AbstractRedisMessageListener;
-import cn.com.gffunds.pushmessage.listener.IrmRedisMessageListener;
+import cn.com.gffunds.pushmessage.listener.RedisMessageListener;
 import cn.com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import cn.com.gffunds.pushmessage.websocket.handler.MessageHandler;
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,12 +31,14 @@ public class RefreshService {
     private MessageDispatcher messageDispatcher;
     @Autowired
     private SubscribeConfig subscribeConfig;
-    @Resource
-    private IrmRedisMessageListener irmRedisMessageListener;
+//    @Resource
+//    private RedisMessageListener redisMessageListener;
+    //    @Autowired
+    //    private IrmRedisProperties irmRedisProperties;
     @Autowired
-    private IrmRedisProperties irmRedisProperties;
-    @Resource
-    private RedisMessageListenerContainer irmRedisMessageListenerContainer;
+    private SourceProperties sourceProperties;
+//    @Resource
+//    private RedisMessageListenerContainer irmRedisMessageListenerContainer;
 
     /**
      * 刷新所有配置
@@ -44,8 +46,16 @@ public class RefreshService {
     @SuppressWarnings("unchecked")
     public void refresh() {
         log.info("=====================订阅配置刷新开始======================");
-        redisConfigRefresh(irmRedisMessageListenerContainer, irmRedisMessageListener, irmRedisProperties);
-        List<BizTopic> list = new ArrayList<>(irmRedisProperties.getSubscribes());
+        List<BizTopic> list = new ArrayList<>();
+        for (SourceProperties.RedisProperties redisProperty : sourceProperties.getRedis()) {
+            String id = redisProperty.getId();
+            String containerName = id + "RedisMessageListenerContainer";
+            String listenerName = id + "RedisMessageListener";
+            RedisMessageListenerContainer container = SpringUtil.getBean(containerName, RedisMessageListenerContainer.class);
+            RedisMessageListener listener = SpringUtil.getBean(listenerName, RedisMessageListener.class);
+            redisConfigRefresh(container, listener, redisProperty);
+            list.addAll(redisProperty.getSubscribes());
+        }
         Set<String> bizIdSet = list.stream().map(BizTopic::getBizId).collect(Collectors.toSet());
         dispatcherRefresh(bizIdSet);
         log.info("=====================订阅配置刷新结束======================");
