@@ -36,17 +36,16 @@ public class MyImportBean implements BeanFactoryAware {
             String id = redisProperty.getId();
             String factory = id + "RedisConnectionFactory";
             String redisTemplate = id + "RedisTemplate";
+           // listableBeanFactory.destroyBean("redisConnectionFactory", listableBeanFactory.getBean("redisConnectionFactory"));
             LettuceConnectionFactory lettuceConnectionFactory = redisConfig.defaultRedisConnectionFactory(redisProperty);
             listableBeanFactory.registerSingleton(factory, lettuceConnectionFactory);
+            listableBeanFactory.registerSingleton("redisConnectionFactory", lettuceConnectionFactory);
             listableBeanFactory.registerSingleton(redisTemplate, redisConfig.defaultRedisTemplate(lettuceConnectionFactory));
             RedisMessageListener redisMessageListener = new RedisMessageListener(id);
             listableBeanFactory.registerSingleton(id + "RedisMessageListener", redisMessageListener);
             RedisMessageListenerContainer container = subscribeConfig.generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty);
-            BeanDefinition beanDefinition = BeanDefinitionBuilder.genericBeanDefinition(LettuceConnectionFactory.class).getBeanDefinition();
-            beanDefinition.setPrimary(true);
-            listableBeanFactory.registerBeanDefinition(factory, beanDefinition);
-            //listableBeanFactory.registerSingleton(id + "RedisMessageListenerContainer", container);
-            SpringUtil.registerBean(id + "RedisMessageListenerContainer", container);
+            listableBeanFactory.registerSingleton(id + "RedisMessageListenerContainer", container);
+        //    SpringUtil.registerBean(id + "RedisMessageListenerContainer", container);
         }
     }
 }
