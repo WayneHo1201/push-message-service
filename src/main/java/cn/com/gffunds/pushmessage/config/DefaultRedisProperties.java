@@ -2,6 +2,7 @@ package cn.com.gffunds.pushmessage.config;
 
 import cn.com.gffunds.pushmessage.websocket.entity.BizTopic;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -11,6 +12,7 @@ import java.util.List;
  * @description redis连接默认配置
  */
 @Data
+@Accessors(chain = true)
 public class DefaultRedisProperties {
     private String host;
     private Integer port;

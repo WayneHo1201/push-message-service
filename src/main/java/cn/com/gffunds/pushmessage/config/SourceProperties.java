@@ -2,6 +2,7 @@ package cn.com.gffunds.pushmessage.config;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
@@ -13,12 +14,12 @@ import java.util.List;
  * @date 2023/2/24 17:38
  * @description irmRedis配置
  */
-@EqualsAndHashCode(callSuper = true)
 @Data
 @ConfigurationProperties(prefix = "spring")
 @Configuration
 @RefreshScope
-public class SourceProperties extends DefaultRedisProperties {
+@Accessors(chain = true)
+public class SourceProperties {
     private List<RedisProperties> redis;
 
 
