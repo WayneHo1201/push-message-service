@@ -31,14 +31,8 @@ public class RefreshService {
     private MessageDispatcher messageDispatcher;
     @Autowired
     private SubscribeConfig subscribeConfig;
-//    @Resource
-//    private RedisMessageListener redisMessageListener;
-    //    @Autowired
-    //    private IrmRedisProperties irmRedisProperties;
     @Autowired
     private SourceProperties sourceProperties;
-//    @Resource
-//    private RedisMessageListenerContainer irmRedisMessageListenerContainer;
 
     /**
      * 刷新所有配置

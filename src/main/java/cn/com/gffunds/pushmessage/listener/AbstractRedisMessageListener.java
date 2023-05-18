@@ -6,9 +6,8 @@ import cn.com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.gffunds.pushmessage.websocket.dispatcher.MessageDispatcher;
 import cn.com.gffunds.pushmessage.websocket.listener.WebSocketMessageListener;
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -19,13 +18,10 @@ import java.util.Map;
 /**
  * @author hezhc
  * @date 2023/2/24 19:24
- * @description
+ * @description 消息监听抽象类(子类在启动的时候自动注入并放入IOC容器)
  */
 @Slf4j
 public class AbstractRedisMessageListener implements MessageListener, WebSocketMessageListener {
-    @Lazy
-    @Autowired
-    private MessageDispatcher messageDispatcher;
 
 
     @Override
@@ -68,6 +64,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
                 .setSourceId(sourceId)
                 .setReceiveTime(receiveTime);
         //  推送到分发器
+        MessageDispatcher messageDispatcher = SpringUtil.getBean("messageDispatcher", MessageDispatcher.class);
         messageDispatcher.doDispatch(message);
     }
 }

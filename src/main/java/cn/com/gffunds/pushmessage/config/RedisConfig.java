@@ -1,47 +1,26 @@
 package cn.com.gffunds.pushmessage.config;
 
-import cn.hutool.extra.spring.SpringUtil;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ListableBeanFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.beans.factory.support.GenericBeanDefinition;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
-import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -51,57 +30,7 @@ import java.util.List;
  */
 @Configuration
 @AutoConfigureAfter(RedisAutoConfiguration.class)
-public class RedisConfig implements BeanFactoryPostProcessor, EnvironmentAware {
-
-//    @Bean
-//    public ReactiveRedisTemplate<Object, Object> reactiveRedisTemplate(
-//            ReactiveRedisConnectionFactory irmRedisConnectionFactory, ResourceLoader resourceLoader) {
-//        JdkSerializationRedisSerializer jdkSerializer = new JdkSerializationRedisSerializer(
-//                resourceLoader.getClassLoader());
-//        RedisSerializationContext<Object, Object> serializationContext = RedisSerializationContext
-//                .newSerializationContext().key(jdkSerializer).value(jdkSerializer).hashKey(jdkSerializer)
-//                .hashValue(jdkSerializer).build();
-//        return new ReactiveRedisTemplate<>(irmRedisConnectionFactory, serializationContext);
-//    }
-//
-//    @Bean
-//    public ReactiveStringRedisTemplate reactiveStringRedisTemplate(
-//            ReactiveRedisConnectionFactory irmRedisConnectionFactory) {
-//        return new ReactiveStringRedisTemplate(irmRedisConnectionFactory);
-//    }
-
-    private SourceProperties sourceProperties;
-
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        DefaultListableBeanFactory listableBeanFactory = (DefaultListableBeanFactory) beanFactory;
-        for (SourceProperties.RedisProperties redisProperty : sourceProperties.getRedis()) {
-            String id = redisProperty.getId();
-            String factory = id + "RedisConnectionFactory";
-            String redisTemplate = id + "RedisTemplate";
-            LettuceConnectionFactory lettuceConnectionFactory = defaultRedisConnectionFactory(redisProperty);
-            lettuceConnectionFactory.afterPropertiesSet();
-            listableBeanFactory.registerSingleton(factory, lettuceConnectionFactory);
-           // listableBeanFactory.registerSingleton("redisConnectionFactory", lettuceConnectionFactory);
-            listableBeanFactory.registerSingleton(redisTemplate, defaultRedisTemplate(lettuceConnectionFactory));
-
-        }
-    }
-
-    @Override
-    public void setEnvironment(Environment environment) {
-        String id = environment.getProperty("spring.redis[0].id");
-        String host = environment.getProperty("spring.redis[0].host");
-        Integer port = environment.getProperty("spring.redis[0].port", Integer.class);
-        String password = environment.getProperty("spring.redis[0].password");
-        SourceProperties.RedisProperties  redisProperties = new SourceProperties.RedisProperties();
-        redisProperties.setId(id);
-        redisProperties.setHost(host);
-        redisProperties.setPort(port);
-        redisProperties.setPassword(password);
-        this.sourceProperties = new SourceProperties().setRedis(Arrays.asList(redisProperties));
-    }
-
+public class RedisConfig  {
 
     /**
      * 单例模式的redisConnectionFactory
@@ -149,14 +78,14 @@ public class RedisConfig implements BeanFactoryPostProcessor, EnvironmentAware {
     private LettuceConnectionFactory getLettuceConnectionFactory(DefaultRedisProperties redisProperties, RedisConfiguration configuration) {
         // 连接池配置
         GenericObjectPoolConfig<Object> genericObjectPoolConfig = new GenericObjectPoolConfig<>();
-//        genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
-//        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getMaxWait());
-//        genericObjectPoolConfig.setMaxIdle(redisProperties.getMaxIdle());
-//        genericObjectPoolConfig.setMinIdle(redisProperties.getMinIdle());
+        genericObjectPoolConfig.setMaxTotal(redisProperties.getMaxActive());
+        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getMaxWait());
+        genericObjectPoolConfig.setMaxIdle(redisProperties.getMaxIdle());
+        genericObjectPoolConfig.setMinIdle(redisProperties.getMinIdle());
         // lettuce pool
         LettucePoolingClientConfiguration.LettucePoolingClientConfigurationBuilder builder = LettucePoolingClientConfiguration.builder();
-//        builder.poolConfig(genericObjectPoolConfig);
-//        builder.commandTimeout(Duration.ofSeconds(redisProperties.getTimeout()));
+        builder.poolConfig(genericObjectPoolConfig);
+        builder.commandTimeout(Duration.ofSeconds(redisProperties.getTimeout()));
         return new LettuceConnectionFactory(configuration, builder.build());
     }
 

@@ -11,6 +11,7 @@ import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class UserService {
     @Resource
     private GFHttpClient ssoGfHttpClient;
     @Autowired
+    @Qualifier(value = "irmRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
     @Value("${websocket.authentication.expire:30}")
     private long expireTime;
