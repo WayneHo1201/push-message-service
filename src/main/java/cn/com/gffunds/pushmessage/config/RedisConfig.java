@@ -6,9 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -29,7 +26,7 @@ import java.util.List;
  * @author guxh
  */
 @Configuration
-@AutoConfigureAfter(RedisAutoConfiguration.class)
+//@AutoConfigureAfter(RedisAutoConfiguration.class)
 public class RedisConfig  {
 
     /**
@@ -95,10 +92,10 @@ public class RedisConfig  {
      * 默认的 RedisTemplate<K,V> 为泛型，使用时不太方便，自定义为 <String, Object>
      * 默认序列化方式为 JdkSerializationRedisSerializer 序列化后的内容不方便阅读，改为序列化成 json
      */
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        return defaultRedisTemplate(redisConnectionFactory);
-    }
+//    @Bean
+//    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+//        return defaultRedisTemplate(redisConnectionFactory);
+//    }
 
     public RedisTemplate<String, Object> defaultRedisTemplate(RedisConnectionFactory redisConnectionFactory) {
         // 配置 json 序列化器 - Jackson2JsonRedisSerializer
