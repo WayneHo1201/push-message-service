@@ -3,10 +3,10 @@ server:
 
 spring:
   application:
-    name: push-message-service-hezc
+    name: push-message-service
   cloud:
     nacos:
-      host: 10.89.187.68:8848,10.89.187.69:8848,10.89.187.70:8848
+      host: localhost:8848
       config:
         server-addr: ${spring.cloud.nacos.host}
         prefix: ${spring.application.name}

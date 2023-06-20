@@ -1,11 +1,11 @@
 package cn.com.gffunds.pushmessage.authenticate;
 
-import cn.com.gffunds.commons.json.JacksonUtil;
 import cn.com.gffunds.httpclient.client.GFHttpClient;
 import cn.com.gffunds.httpclient.entity.HttpClientResult;
-import cn.com.gffunds.pushmessage.common.ReturnResult;
-import cn.com.gffunds.pushmessage.controller.AuthenticateController;
-import cn.com.gffunds.pushmessage.websocket.entity.UserInfo;
+import cn.com.hzc.pushmessage.common.ReturnResult;
+import cn.com.hzc.pushmessage.controller.AuthenticateController;
+import cn.com.hzc.pushmessage.util.JacksonUtil;
+import cn.com.hzc.pushmessage.websocket.entity.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
