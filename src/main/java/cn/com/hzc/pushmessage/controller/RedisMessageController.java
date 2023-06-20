@@ -1,7 +1,8 @@
 package cn.com.hzc.pushmessage.controller;
 
-import cn.com.hzc.pushmessage.util.JacksonUtil;
-import com.fasterxml.jackson.databind.JsonNode;
+import cn.com.hzc.pushmessage.common.ReturnResult;
+import cn.com.hzc.pushmessage.entity.PushDTO;
+import cn.com.hzc.pushmessage.websocket.constants.WebSocketConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,10 +28,13 @@ public class RedisMessageController {
     @Resource
     private RedisTemplate defaultRestTemplate;
 
-    @PostMapping("/send")
-    public String sendIrm(@RequestBody JsonNode jsonNode) {
-        String channel = jsonNode.get("channel").asText();
-        defaultRestTemplate.convertAndSend(channel, JacksonUtil.toJson(jsonNode.get("data")));
-        return "success";
+    @PostMapping("/push")
+    public ReturnResult push(@RequestBody PushDTO pushDTO) {
+        String bizId = pushDTO.getBizId();
+        String topic = pushDTO.getTopic();
+        String channel = bizId + WebSocketConstants.SEPARATOR + topic;
+        defaultRestTemplate.convertAndSend(channel, pushDTO.getData());
+        log.info("发送信息成功! channel={}", channel);
+        return new ReturnResult<>();
     }
 }

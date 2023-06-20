@@ -24,6 +24,7 @@ public class DefaultRedisProperties {
     private Long timeout = 3000L;
     private List<BizTopic> subscribes;
     private Sentinel sentinel;
+    private Integer messageLogLimited = 4000;
     /**
      * Redis sentinel properties.
      */

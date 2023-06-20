@@ -14,10 +14,13 @@ public class RedisMessageListener extends AbstractRedisMessageListener {
 
     private String id;
 
+    private Integer limit;
+
+
     @Override
     @SuppressWarnings("unchecked")
     public void onMessage(org.springframework.data.redis.connection.Message redisMessage, byte[] pattern) {
         RedisTemplate<String, Object> redisTemplate = SpringUtil.getBean(id + "RedisTemplate", RedisTemplate.class);
-        super.messageListen(redisTemplate, redisMessage, id);
+        super.messageListen(redisTemplate, redisMessage, id, limit);
     }
 }

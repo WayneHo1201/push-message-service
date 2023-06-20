@@ -1,12 +1,6 @@
 package cn.com.hzc.pushmessage.service;
 
 import cn.com.gffunds.httpclient.client.GFHttpClient;
-import cn.com.gffunds.httpclient.entity.HttpClientResult;
-import cn.com.hzc.pushmessage.common.ReturnResult;
-import cn.com.hzc.pushmessage.common.enumeration.ErrCodeEnum;
-import cn.com.hzc.pushmessage.exception.PushMessageException;
-import cn.com.hzc.pushmessage.util.JacksonUtil;
-import cn.com.hzc.pushmessage.websocket.constants.WebSocketConstants;
 import cn.com.hzc.pushmessage.websocket.entity.UserInfo;
 import cn.hutool.core.util.IdUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +9,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,20 +31,11 @@ public class UserService {
      * 请求sso鉴权获取用户信息
      */
     @SuppressWarnings("unchecked")
-    public String gettoken(String sessionId) {
-        // 对接sso校验并获取用户信息
-        Map<String, String> map = new HashMap<>();
-        map.put(WebSocketConstants.SESSION_ID, sessionId);
-        // 调用第三方接口获取sessionId
-        HttpClientResult<ReturnResult> rs = ssoGfHttpClient.doPostForJson(WebSocketConstants.AUTHORIZATION_URL, null, JacksonUtil.toJson(map), true, ReturnResult.class);
-        ReturnResult returnResult = rs.getContent();
-        if (!returnResult.isSuccess()) {
-            throw new PushMessageException(returnResult.getErrorMsg(), ErrCodeEnum.TOKEN_INCORRECT.code());
-        }
+    public String gettoken(String username) {
         // 构建token
         String uuid = IdUtil.randomUUID().replace("-", "");
-        // 获取用户信息
-        UserInfo userInfo = JacksonUtil.toObject(JacksonUtil.toJson(returnResult.getData()), UserInfo.class);
+        // todo 从数据库获取用户信息
+        UserInfo userInfo =  new UserInfo().setUserId("999").setNickname("何智聪").setUsername("wayne");
         defaultRestTemplate.opsForValue().set(uuid, userInfo, expireTime, TimeUnit.SECONDS);
         return uuid;
     }

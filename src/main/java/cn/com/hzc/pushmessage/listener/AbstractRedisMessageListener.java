@@ -8,6 +8,7 @@ import cn.com.hzc.pushmessage.websocket.listener.WebSocketMessageListener;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,7 +30,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
         // 每个监听器都需要构造自己的方法
     }
 
-    public void messageListen(RedisTemplate<String, Object> redisTemplate, Message redisMessage, String sourceId) {
+    public void messageListen(RedisTemplate<String, Object> redisTemplate, Message redisMessage, String sourceId, int limit) {
         // 获取消息
         byte[] messageBody = redisMessage.getBody();
         // 使用值序列化器转换
@@ -43,7 +44,7 @@ public class AbstractRedisMessageListener implements MessageListener, WebSocketM
         // 渠道名称转换
         logMap.put("消息源", sourceId);
         logMap.put("频道", channel);
-        logMap.put("消息内容", msg);
+        logMap.put("消息内容", StringUtils.substring(String.valueOf(msg), 0, limit));
         logMap.put("接收时间", receiveTime);
         log.info("=======================================redis消息监听器=======================================");
         log.info(JacksonUtil.toJson(logMap));

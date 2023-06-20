@@ -43,7 +43,7 @@ public class DynamicGeneratedBean implements BeanFactoryAware {
             listableBeanFactory.registerSingleton(id + FACTORY, lettuceConnectionFactory);
             // register redisTemplate
             listableBeanFactory.registerSingleton(id + REDIS_TEMPLATE, redisConfig.defaultRedisTemplate(lettuceConnectionFactory));
-            RedisMessageListener redisMessageListener = new RedisMessageListener(id);
+            RedisMessageListener redisMessageListener = new RedisMessageListener(id, redisProperty.getMessageLogLimited());
             // register MessageListener
             listableBeanFactory.registerSingleton(id + LISTENER, redisMessageListener);
             RedisMessageListenerContainer container = subscribeConfig.generateRedisMessageListenerContainer(redisMessageListener, lettuceConnectionFactory, redisProperty);

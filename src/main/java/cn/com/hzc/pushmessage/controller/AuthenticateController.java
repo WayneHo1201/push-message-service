@@ -21,8 +21,8 @@ public class AuthenticateController {
      * sessionId获取token
      */
     @GetMapping("/gettoken")
-    public ReturnResult<String> authorize(@RequestParam String sessionId) {
-        String token = userService.gettoken(sessionId);
+    public ReturnResult<String> authorize(@RequestParam String username) {
+        String token = userService.gettoken(username);
         return new ReturnResult<>(token);
     }
 }
