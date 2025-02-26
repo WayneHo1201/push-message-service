@@ -1,6 +1,6 @@
 package com.gffunds.pushmessage.aspect;
 
-import cn.com.gffunds.commons.json.JacksonUtil;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.gffunds.pushmessage.common.ReturnResult;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -73,7 +73,7 @@ public class WebLogAspect {
             logMap.put("Headers", headers);
             logMap.put("Request Args", objects);
             log.info("=======================================请求开始=======================================");
-            log.info(JacksonUtil.toJson(logMap));
+            log.info(JacksonUtils.toJson(logMap));
         }
     }
 
@@ -107,7 +107,7 @@ public class WebLogAspect {
             Map<String, Object> logMap = new LinkedHashMap<>();
             logMap.put("Time-Consuming", String.format("%sms", System.currentTimeMillis() - startTime));
             logMap.put("Response", response);
-            String json = JacksonUtil.toJson(logMap);
+            String json = JacksonUtils.toJson(logMap);
             log.info(json.length() > logMaxLen ? json.substring(0, logMaxLen).concat("【已截断】") : json);
         }
         return result;

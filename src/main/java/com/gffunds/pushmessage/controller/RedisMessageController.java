@@ -8,6 +8,7 @@ import com.gffunds.pushmessage.listener.RedisMessageListener;
 import com.gffunds.pushmessage.websocket.entity.BizTopic;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -36,8 +37,9 @@ public class RedisMessageController {
     private RedisTemplate redisTemplate;
 
     @GetMapping("/send")
-    public String send(@RequestParam String channel) {
-        redisTemplate.convertAndSend(channel, "测试redis推送");
+    public String send(@RequestParam String channel,
+                       @RequestParam String message) {
+        redisTemplate.convertAndSend(channel, message);
         return "success";
     }
 
@@ -94,5 +96,8 @@ public class RedisMessageController {
         String msg = String.format("刷新redis订阅配置！[%s]", String.join(",", subscribes));
         return new ReturnResult<>(msg);
     }
+
+    @Value("${jasypt.encryptor.password}")
+    private String key;
 
 }

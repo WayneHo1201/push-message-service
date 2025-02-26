@@ -1,7 +1,6 @@
 package com.gffunds.pushmessage.websocket.handler;
 
-import cn.com.gffunds.commons.exception.JsonDeserializerException;
-import cn.com.gffunds.commons.json.JacksonUtil;
+import com.alibaba.nacos.common.utils.JacksonUtils;
 import com.gffunds.pushmessage.websocket.constants.WebSocketConstants;
 import com.gffunds.pushmessage.websocket.consumer.MessageConsumer;
 import com.gffunds.pushmessage.websocket.entity.BizTopic;
@@ -59,8 +58,8 @@ public class CommonTextWebSocketHandler extends TextWebSocketHandler {
         // 构造messageRequest
         MessageRequest messageRequest;
         try {
-            messageRequest = JacksonUtil.toObject(payload, MessageRequest.class);
-        } catch (JsonDeserializerException e) {
+            messageRequest = JacksonUtils.toObj(payload, MessageRequest.class);
+        } catch (Exception e) {
             String msg = String.format("请求消息不合法！payload=%s", payload);
             log.error(msg);
             sendMessage(webSocketSession, new TextMessage(msg));
